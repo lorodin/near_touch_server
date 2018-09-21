@@ -1,0 +1,7 @@
+{
+    "port": 3030,
+    "mongoose":{
+        "uri": "mongodb://localhost:27017/near_touch"
+    },
+    "log_level": "debug"
+}

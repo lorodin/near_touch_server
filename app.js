@@ -1,28 +1,10 @@
-const db = [];
+const server  = require('http').createServer();
+const io      = require('socket.io')(server);
+const config  = require('config');
+const log4js  = require('log4js');
+const logger  = log4js.getLogger();   
+const db    = require('./models/db.models');
 
-exports.saveSync = (doc)=>{
-    db.push(doc);
-}
+logger.level = config.log_level;
 
-exports.first = (obj)=>{
-    return db.filter((doc)=>{
-        for(let key in obj){
-            if(doc[key] != obj[key])
-                return false;
-        }
-        return true;
-    }).shift();
-}
-
-exports.clear = () => {
-    db.length = 0;
-}
-
-exports.save = (doc, cb) => {
-    db.push(doc);
-    if(cb){
-        setTimeout(()=>{
-            cb();
-        }, 100);
-    }
-}
+server.listen(config.port);
