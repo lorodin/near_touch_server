@@ -77,6 +77,39 @@ describe('Test users repository', () => {
         });
     });
 
+    // Обновление данных пользователя
+    it('Test update user', (done) => {
+        user_1.phone = '333';
+        user_1.name = 'Oleg';
+        user_1.phone_confirm = true;
+        repository.saveUser(user_1, (err, u) => {
+            assert(err == null);
+            repository.findUserById(user_1.id, (err, u1) => {
+                assert(err == null);
+                assert(u1.id == user_1.id);
+                assert(u1.name == 'Oleg');
+                assert(u1.phone == '333');
+                assert(u1.phone_confirm);
+                done();
+            });
+        });
+    })
+
+
+    // Поиск пользователя по новому номеру телефона
+    it('Test find user by new phone number', (done) => {
+        repository.findUserByPhone(user_1.phone, (err, u) => {
+            assert(err == null);
+            assert(u.id == user_1.id);
+            assert(u.name == user_1.name);
+            assert(u.phone == user_1.phone);
+            assert(u.phone != user_2.phone);
+            assert(u.phone_confirm == user_1.phone_confirm);
+            done();
+        })
+    })
+    
+
     // Удаление пользователя по id
     it('Remove user by id', (done) => {
         repository.removeUserById(user_1.id, (err, user) => {
