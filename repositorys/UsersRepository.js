@@ -24,35 +24,29 @@ class UserRepository{
             !user.phone ||
             user.phone == '') return cb(error_messages.ERROR_MODEL)
         
-        if(user.id && user.id != ''){
-            this.findUserById(user.id, (err, u) => {
-                if(err) return cb(err);
-                if(u == null){
-                    this.saveUser({
-                        name: user.name,
-                        phone: user.phone,
-                        phone_confirm: user.phone_confirm
-                    }, cb);
-                    return;
-                }
+        db.User.findById(user.id, (err, u) => {
+            if(err) return cb(err);
+
+            if(u){
                 u.name = user.name;
                 u.phone = user.phone;
                 u.phone_confirm = user.phone_confirm;
                 u.save(cb);
-            });
-        }else{
-            this.findUserByPhone(user.phone, (err, u) => {
+                return;
+            }
+
+            db.User.findOneAndDelete({phone: user.phone}, (err, u) => {
                 if(err) return cb(err);
 
-                if(u) return cb(error_messages.PHONE_REGISTRATE);
-
                 let new_user = new db.User();
+            
                 new_user.name = user.name;
                 new_user.phone = user.phone;
+                new_user.phone_confirm = user.phone_confirm != undefined ? user.phone_confirm : false;
 
                 new_user.save(cb);
-            });    
-        }
+            });
+        });
     }
 }
 

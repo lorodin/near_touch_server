@@ -17,7 +17,7 @@ describe('Test users repository', () => {
 
     let exists_phone_user = {
         name: 'Larisa',
-        phone: '123'
+        phone: '321'
     };
 
     let repository = new UsersRepository();
@@ -44,12 +44,30 @@ describe('Test users repository', () => {
         })
     });
 
-    // Не сохранять пользователя с уже существующим номером телефона
-    it('Not save alredy exists phone', (done) => {
+    // Сохранение пользователя с номер телефона, который уже есть в базе и удаление старого
+    // пользователя с этим номером телефона
+    it('Save alredy exists phone and remove old user with this phone', (done) => {
         repository.saveUser(exists_phone_user, (err, user) => {
-            assert(err == error_messages.PHONE_REGISTRATE);
-            assert(user == undefined);
-            done();
+            assert(err == null, "Error not null 1");
+            
+            assert(user.name == exists_phone_user.name, "Error name: user.name=" + user.name +
+                                                        "; exists_phone_user.name=" + exists_phone_user.name);
+            assert(user.phone == exists_phone_user.phone, "Error phone: user.phone=" + user.phone + 
+                                                          " exists_phone_user.phone=" + user.phone);
+            exists_phone_user = user;
+            
+            repository.findUserByPhone(exists_phone_user.phone, (err, u) => {
+                assert(err == null, "Error not null 2");
+                
+                assert(u.name == exists_phone_user.name, "Error name 2: u.name=" + u.name +
+                                                         " exists_phone_user.name=" + exists_phone_user.name);
+                assert(u.id == exists_phone_user.id, "Error id 2: " + u.id +
+                                                     " exists_phone_user.id=" + exists_phone_user.id);
+
+                repository.removeUserById(exists_phone_user.id, (err, u) => {
+                    done();
+                });
+            });
         })
     });
 
