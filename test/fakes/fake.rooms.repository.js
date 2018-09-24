@@ -3,6 +3,7 @@ const error_messages = require('../../enums/error.messages');
 class FakeRoomsRepository{
     constructor(fake_db) {
         this.db = fake_db;
+        this.id_increment = 0;
     }
 
     findRoomById(id, cb){
@@ -77,7 +78,13 @@ class FakeRoomsRepository{
 
         if(!room.confirm) room.confirm = false;
         if(!room.points) room.points = 0;
+        
         room.date_created = new Date();
+
+        this.id_increment ++;
+
+        room.id = this.id_increment + '';
+
         this.db.rooms.push(room);
         
         cb(null, room);

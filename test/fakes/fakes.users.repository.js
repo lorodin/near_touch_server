@@ -3,6 +3,7 @@ const error_messages = require('../../enums/error.messages');
 class FakeUsersRepository{
     constructor(fake_db){
         this.db = fake_db;
+        this.id_increment = 0;
     }
 
     findUserById(id, cb){
@@ -39,7 +40,12 @@ class FakeUsersRepository{
             return cb(null, find);
         }
 
+        this.id_increment ++;
+
+        user.id = this.id_increment + '';
+
         if(!user.phone_confirm) user.phone_confirm = false;
+
         this.db.users.push(user);
 
         cb(null, user);

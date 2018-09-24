@@ -35,43 +35,36 @@ describe('Fake Rooms repository', () => {
     }
 
     let room_1 = {
-        id: '1',
         from: user_1.id,
         to: user_2.id
     };
 
     let room_2 = {
-        id: '2',
         from: user_1_2.id,
         to: user_2_2.id
     }
 
     let incorrect_room_1 = {
-        id: '4',
         from: '-1',
         to: user_3_1.id
     };
 
     let incorrect_room_2 = {
-        id: '5',
         from: user_3_1.id,
         to: '-1'
     };
 
     let incorrect_room_3 = {
-        id: '6',
         from: user_3_1.id,
         to: user_3_1.id
     };
 
     let incorrect_room_4 = {
-        id: '7',
         from: user_1.id,
         to:user_3_1.id
     };
 
     let incorrect_room_5 = {
-        id: '8',
         from: user_3_1.id,
         to: user_1.id
     };
@@ -96,6 +89,7 @@ describe('Fake Rooms repository', () => {
             assert(r1.points == 0);
             assert(r1.date_created);
             room_1 = r1;
+            console.log(room_1);
             repository.saveRoom(room_2, (err, r2) => {
                 assert(err == null);
                 assert(r2.from == room_2.from);
@@ -125,13 +119,13 @@ describe('Fake Rooms repository', () => {
         });
     
         it('Find room by user id', (done) => {
-            repository.findRoomById(user_1.id, (err, room) => {
-                assert(err == null);
-                assert(room_1.id == room.id);
-                assert(room_1.from == room.from);
-                assert(room_1.to == room.to);
-                assert(room_1.confirm == room.confirm);
-                assert(room_1.points == room.points);
+            repository.findRoomByUserId(user_1.id, (err, room) => {
+                assert(err == null, 'Error != null: ' + err);
+                assert(room_1.id == room.id, 'Ids not equal: ' + room_1.id + ' ' + room.id);
+                assert(room_1.from == room.from, 'From not equal: ' + room_1.from + ' ' + room.from);
+                assert(room_1.to == room.to, 'To not equal: ' + room_1.to + ' ' + room.to);
+                assert(room_1.confirm == room.confirm, 'Confirm not equal: ' + room_1.confirm + ' ' + room.confirm);
+                assert(room_1.points == room.points, 'Points not equal: ' + room_1.points + ' ' + room.points);
                 assert(room_1.date_created.getDate() == room.date_created.getDate());
                 done();
             });

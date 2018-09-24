@@ -7,14 +7,13 @@ describe('Fake users repository', () => {
     let fake_db = new FakeDataBase();
 
     let repository = new FakeUsersRepository(fake_db);
+
     let user_1 = {
-        id: '1',
         name: 'Vasy',
         phone: '333'
     };
     
     let user_2 = {
-        id: '2',
         name: 'Igor',
         phone: '123'
     };
