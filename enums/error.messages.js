@@ -7,5 +7,6 @@ module.exports = {
     CLIENT_NOT_FOUND: 'Client not found',
     CLIENT_USER_EXISTS: 'Client whith user exists',
     ROOM_NOT_FOUND: 'Room not found',
-    ROOM_CLIENT_BUSY: 'Client alrady busy'
+    ROOM_CLIENT_BUSY: 'Client alrady busy',
+    INCORRECT_DATA: 'Incorrect data'
 }
