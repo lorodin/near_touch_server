@@ -12,5 +12,6 @@ module.exports = {
     CODE_NOT_FOUND: 'Code not found',
     SOCKET_EXISTS: 'Socket exists',
     SOCKET_NOT_FOUND: 'Socket not found',
-    CLIETN_NOT_CREATED: 'Client not created'
+    CLIETN_NOT_CREATED: 'Client not created',
+    CODE_NOT_VALID: 'Incorrect code'
 }
