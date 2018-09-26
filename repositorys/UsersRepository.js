@@ -10,12 +10,12 @@ class UserRepository{
         db.User.findOne({'phone': phone}, cb);
     }
 
-    removeUserById(id, cb){
-        db.User.findByIdAndDelete(id, cb);
+    findManyByPhone(phone, cb){
+        db.User.find({phone: phone}, cb);
     }
 
-    removeUserByPhone(phone, cb){
-        db.User.findOneAndDelete({'phone': phone}, cb);
+    removeUserById(id, cb){
+        db.User.findByIdAndDelete(id, cb);
     }
 
     saveUser(user, cb){
@@ -35,17 +35,17 @@ class UserRepository{
                 return;
             }
 
-            db.User.findOneAndDelete({phone: user.phone}, (err, u) => {
-                if(err) return cb(err);
+            // db.User.findOneAndDelete({phone: user.phone}, (err, u) => {
+            //     if(err) return cb(err);
 
-                let new_user = new db.User();
-            
-                new_user.name = user.name;
-                new_user.phone = user.phone;
-                new_user.phone_confirm = user.phone_confirm != undefined ? user.phone_confirm : false;
+            let new_user = new db.User();
+        
+            new_user.name = user.name;
+            new_user.phone = user.phone;
+            new_user.phone_confirm = user.phone_confirm != undefined ? user.phone_confirm : false;
 
-                new_user.save(cb);
-            });
+            new_user.save(cb);
+        //     });
         });
     }
 }

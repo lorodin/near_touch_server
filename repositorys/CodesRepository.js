@@ -11,6 +11,10 @@ class CodesRepository{
         });
     }
 
+    findCodeByUserId(id, cb){
+        db.Code.findOne({user_id: id}, cb);
+    }
+
     removeCode(code, cb){
         db.Code.findByIdAndDelete(code.id, cb);
     }

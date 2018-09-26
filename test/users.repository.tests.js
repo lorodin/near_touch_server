@@ -13,6 +13,11 @@ describe('Test users repository', () => {
         phone: '321'
     };
 
+    let user_3 = {
+        name: 'Larisa',
+        phone: '123'
+    };
+
     let incorrect_user = {};
 
     let exists_phone_user = {
@@ -22,7 +27,7 @@ describe('Test users repository', () => {
 
     let repository = new UsersRepository();
 
-    // Создание двух пользователй
+    // Создание трех пользоватлей пользователй
     beforeEach((done)=>{
         repository.saveUser(user_1, (err, user1)=> {
             assert(err == undefined);
@@ -30,10 +35,35 @@ describe('Test users repository', () => {
             repository.saveUser(user_2, (err, user2) => {
                 assert(err == undefined);
                 user_2 = user2;
-                done();
+                repository.saveUser(user_3, (err, user3) => {
+                    assert(err == null);
+                    user_3 = user3;
+                    done();
+                });
             })
         })
     });
+
+    it('Find many users by phone', (done) => {
+        repository.findManyByPhone(user_1.phone, (err, users) => {
+            assert(err == null);
+            assert(users.length == 2);
+            let find_1 = users.find(u => u.id == user_1.id);
+            let find_2 = users.find(u => u.id == user_3.id);
+            
+            assert(find_1.id == user_1.id);
+            assert(find_1.name == user_1.name);
+            assert(find_1.phone == user_1.phone);
+            assert(find_1.phone_confirm == user_1.phone_confirm);
+
+            assert(find_2.id == user_3.id);
+            assert(find_2.name == user_3.name);
+            assert(find_2.phone == user_3.phone);
+            assert(find_2.phone_confirm == user_3.phone_confirm);
+
+            done();
+        })
+    })
 
     // Не сохранять пользователя с некорректными полями
     it('Not save incorrect user', (done) => {
@@ -41,33 +71,6 @@ describe('Test users repository', () => {
             assert(err == error_messages.ERROR_MODEL);
             assert(user == undefined);
             done();
-        })
-    });
-
-    // Сохранение пользователя с номер телефона, который уже есть в базе и удаление старого
-    // пользователя с этим номером телефона
-    it('Save alredy exists phone and remove old user with this phone', (done) => {
-        repository.saveUser(exists_phone_user, (err, user) => {
-            assert(err == null, "Error not null 1");
-            
-            assert(user.name == exists_phone_user.name, "Error name: user.name=" + user.name +
-                                                        "; exists_phone_user.name=" + exists_phone_user.name);
-            assert(user.phone == exists_phone_user.phone, "Error phone: user.phone=" + user.phone + 
-                                                          " exists_phone_user.phone=" + user.phone);
-            exists_phone_user = user;
-            
-            repository.findUserByPhone(exists_phone_user.phone, (err, u) => {
-                assert(err == null, "Error not null 2");
-                
-                assert(u.name == exists_phone_user.name, "Error name 2: u.name=" + u.name +
-                                                         " exists_phone_user.name=" + exists_phone_user.name);
-                assert(u.id == exists_phone_user.id, "Error id 2: " + u.id +
-                                                     " exists_phone_user.id=" + exists_phone_user.id);
-
-                repository.removeUserById(exists_phone_user.id, (err, u) => {
-                    done();
-                });
-            });
         })
     });
 
@@ -137,22 +140,16 @@ describe('Test users repository', () => {
         });
     });
 
-    // Удаление пользователя по номеру телефона
-    it('Remove user by phone', (done) => {
-        repository.removeUserByPhone(user_2.phone, (err, user) => {
-            assert(err == null);
-            assert(user.name == user_2.name);
-            done();
-        })
-    });
-
     // Если что-то пошло не так, то на всякий случай удаляем всех пользователей
     afterEach((done) => {
         repository.removeUserById(user_1.id, (err, u1) => {
             assert(err == undefined);
             repository.removeUserById(user_2.id, (err, u2) => {
                 assert(err == undefined);
-                done();
+                repository.removeUserById(user_3.id, (err, u3) => {
+                    assert(err == null);
+                    done();
+                });
             })
         });
     })

@@ -9,6 +9,7 @@ class IOClientsContainer{
     addClient(socket, user, cb){
         if(this.clients[socket.id]) return cb(error_messages.CLIENT_EXISTS);
 
+        
         this.findClientByUserId(user.id, (err, c) => {
             if(err) return cb(err);
             if(c) return cb(error_messages.CLIENT_USER_EXISTS);

@@ -89,7 +89,6 @@ describe('Fake Rooms repository', () => {
             assert(r1.points == 0);
             assert(r1.date_created);
             room_1 = r1;
-            console.log(room_1);
             repository.saveRoom(room_2, (err, r2) => {
                 assert(err == null);
                 assert(r2.from == room_2.from);

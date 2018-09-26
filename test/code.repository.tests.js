@@ -45,6 +45,17 @@ describe('Tests codes repository', () => {
         });
     });
 
+    // Поиск кода по id пользователя
+    it('Find code by user id', (done) => {
+        c_repository.findCodeByUserId(user.id, (err, c) => {
+            assert(err == null);
+            assert(c != null);
+            assert(c.code == code.code);
+            assert(c.date_created.getDate() == code.date_created.getDate());
+            done();
+        })
+    })
+
     // Удаление кода
     it('Remove code', (done) => {
         c_repository.removeCode(code, (err, c)=>{

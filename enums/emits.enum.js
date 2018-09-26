@@ -12,7 +12,8 @@ const EMITS = {
     COMPANON_MOVE: 'c_move',
     COMPANON_EXIT: 'c_exit',
     COMPANON_CLOSE_ROOM: 'c_close_room',
-    UNREGISTRATE: 'unregistrate'
+    UNREGISTRATE: 'unregistrate',
+    ERROR: 'error'
 }
 
 module.exports = EMITS;

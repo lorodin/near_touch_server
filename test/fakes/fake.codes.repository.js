@@ -16,6 +16,16 @@ class FakeCodesRepository{
         return cb(null, result);
     }
     
+    findCodeByUserId(id, cb){
+        let user = this.db.users.find(u => u.id == id);
+
+        if(!user) return cb(null, null);
+
+        let result = this.db.codes.find(c => c.user_id == id);
+
+        return cb(null, result);
+    }
+
     removeCode(code, cb){
         let find = this.db.codes.find(c => c.id == code.id);
         

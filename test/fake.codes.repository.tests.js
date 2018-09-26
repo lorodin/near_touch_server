@@ -138,6 +138,17 @@ describe('Fake codes repository', () => {
                 done();
             });
         });
+        it('Find code by user id', (done) => {
+            repository.findCodeByUserId(user_1.id, (err, c) => {
+                assert(err == null);
+                assert(c != null);
+                assert(c.code == code.code);
+                assert(c.id == code.id);
+                assert(c.user_id == code.user_id);
+                assert(c.date_created.getDate() == code.date_created.getDate());
+                done();
+            });
+        });
     });
 
     afterEach(() => {

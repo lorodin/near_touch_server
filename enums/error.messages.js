@@ -9,5 +9,8 @@ module.exports = {
     ROOM_NOT_FOUND: 'Room not found',
     ROOM_CLIENT_BUSY: 'Client alrady busy',
     INCORRECT_DATA: 'Incorrect data',
-    CODE_NOT_FOUND: 'Code not found'
+    CODE_NOT_FOUND: 'Code not found',
+    SOCKET_EXISTS: 'Socket exists',
+    SOCKET_NOT_FOUND: 'Socket not found',
+    CLIETN_NOT_CREATED: 'Client not created'
 }

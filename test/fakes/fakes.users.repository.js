@@ -11,10 +11,9 @@ class FakeUsersRepository{
         cb(null, find);
     }
 
-    findUserByPhone(phone, cb){
-        let find = this.db.users.find(u => u.phone == phone);
-        
-        cb(null, find);
+    findManyByPhone(phone, cb){
+        let result = this.db.users.filter(u => u.phone == phone);
+        return cb(null, result);
     }
 
     removeUserById(id, cb){

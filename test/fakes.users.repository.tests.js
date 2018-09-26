@@ -18,6 +18,11 @@ describe('Fake users repository', () => {
         phone: '123'
     };
     
+    let user_3 = {
+        name: 'Larisa',
+        phone: '333'
+    };
+
     let incorrect_user = {};
 
     beforeEach((done) => {
@@ -38,8 +43,38 @@ describe('Fake users repository', () => {
                 assert(user2.phone == user_2.phone, '2 Phone not equal: ' + user2.phone + ' ' + user_2.phone);
                 assert(!user2.phone_confirm, '1 Phone confirm is false ' + user2.phone_confirm);
                 user_2 = user2;
-                done();
+
+                repository.saveUser(user_3, (err, user3) => {
+                    assert(err == null);
+                    assert(user3 != null);
+                    user_3 = user3;
+                    assert(fake_db.users.length == 3);
+                    done();
+                });
             });
+        });
+    });
+
+    it('Find many by phone', (done) => {
+        repository.findManyByPhone(user_1.phone, (err, users) => {
+            assert(err == null);
+            
+            assert(users.length == 2, 'Users length not 2: ' + users.length);
+            
+            let u1 = users.find(u => u.id == user_1.id);
+            let u2 = users.find(u => u.id == user_3.id);
+
+            assert(u1.id == user_1.id);
+            assert(u1.name == user_1.name);
+            assert(u1.phone == user_1.phone);
+            assert(u1.phone_confirm == user_1.phone_confirm);
+
+            assert(u2.id == user_3.id);
+            assert(u2.name == user_3.name);
+            assert(u2.phone == user_3.phone);
+            assert(u2.phone_confirm == user_3.phone_confirm);
+
+            done();
         });
     });
 
@@ -62,17 +97,8 @@ describe('Fake users repository', () => {
         });
     });
 
-    it('Find user by phone', (done) => {
-        repository.findUserByPhone(user_1.phone, (err, user) => {
-            assert(err == null);
-            assert(user_1.id == user.id);
-            assert(user_1.phone == user.phone);
-            assert(user_1.name == user.name);
-            assert(user_1.phone_confirm == user.phone_confirm);
-            done();
-        });
-    });
 
+    
     it('Update old user', (done) => {
         user_2.name = 'New name';
         user_2.phone_confirm = true;
@@ -83,7 +109,7 @@ describe('Fake users repository', () => {
             assert(user_2.name == user.name);
             assert(user_2.phone == user.phone);
             assert(user_2.phone_confirm == user.phone_confirm);
-            assert(repository.length() == 2);
+            assert(repository.length() == 3);
             done();
         });
     });
@@ -95,7 +121,11 @@ describe('Fake users repository', () => {
             repository.removeUserById(user_2.id, (err, user2) => {
                 assert(err == null)
                 assert(user2 != null);
-                done();
+                repository.removeUserById(user_3.id, (err, user3) => {
+                    assert(err == null);
+                    assert(user3 != null);
+                    done();
+                });
             });
         });
     });
