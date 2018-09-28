@@ -10,7 +10,8 @@ const CMDS = {
     MOVE: 'move',
     EXIT_ROOM: 'exit_room',
     CLOSE_ROOM: 'close_room',
-    DISCONNECT: 'disconnec'
+    DISCONNECT: 'disconnec',
+    GET_CODE: 'get_code'
 }
 
 module.exports = CMDS;

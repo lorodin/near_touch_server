@@ -20,6 +20,11 @@ class Logger{
             'msg': msg
         });
     }
+    msgToString(i){
+        if(i > 0 && i < this.history.length)
+            return '[' + this.history[i].type + '] : ' + this.history[i].msg;
+        return '';
+    }
 }
 
 module.exports = Logger;

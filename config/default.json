@@ -4,5 +4,6 @@
         "uri": "mongodb://localhost:27017/near_touch"
     },
     "log_level": "debug",
-    "code_live": 5400
+    "code_live": 5400,
+    "phone_confirm_length": 5
 }

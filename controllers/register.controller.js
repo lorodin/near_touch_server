@@ -1,37 +1,107 @@
 const error_messages = require('../enums/error.messages');
 const cmds = require('../enums/cmd.enum');
 const emits = require('../enums/emits.enum');
+const randomCode = require('../helpers/code.generator');
 
 class RegisterController{
-    constructor(cache_service, database_service, logger){
+    constructor(cache_service, database_service, sms_service, logger, configs){
         this._cache = cache_service;
         this._db = database_service;
         this._logger = logger;
+        this._configs = configs;
+        this._sms = sms_service;
     }
 
-    setAction(client_id, data){
-        this._cache.ClientsContainer.findClientBySocketId(client_id, (err, client) => {
+    setAction(action, cb){
+        this._cache.SocketsService.get(action.client_id, (err, socket) => {
             if(err){
                 this.logError(err);
                 return cb ? cb() : null;
             }
-            if(!client){
+            if(!socket){
                 this.logError(error_messages.CLIENT_NOT_FOUND);
                 return cb ? cb() : null;
             }
-            switch(data.cmd){
+            switch(action.cmd){
                 case cmds.REGISTER:
                     setTimeout(()=>{
-                        this.register(socket, data, cb);
+                        this.register(socket, action.data, cb);
                     }, 0);
                 break;
                 case cmds.VALIDATE_CODE:
                     setTimeout(() => {
-                        this.confirm(socket, data, cb)
+                        this.confirm(socket, action.data, cb)
+                    }, 0);
+                break;
+                case cmds.GET_CODE:
+                    setTimeout(() => {
+                        this.makeCode(socket, action.data, cb);
                     }, 0);
                 break;
             }
         })
+    }
+
+    makeCode(socket, data, cb){
+        if(!data.user_id || data.user_id.trim() == ''){
+            socket.emit(emits.ERROR, {msg: error_messages.ERROR_MODEL});
+            return cb ? cb() : null;
+        }
+
+        this._db.UsersRepository.findUserById(data.user_id, (err, user) => {
+            if(err){
+                this._logger.error(err);
+                return cb ? cb() : null;
+            }
+            if(!user){
+                socket.emit(emits.UNREGISTRATE, {msg: error_messages.USER_NOT_FOUND});
+                return cb ? cb() : null;
+            }
+            this._db.CodesRepository.findCodeByUserId(user.id, (err, code) => {
+                if(err){
+                    this._logger.error(err);
+                    return cb ? cb() : null;
+                }
+                
+                let new_code = randomCode(this._configs.phone_confirm_length);
+
+                if(code){
+                    code.code = new_code;
+                    this._db.CodesRepository.saveCode(code, (err, c) => {
+                        if(err){
+                            this._logger.error(err);
+                            return cb ? cb() : null;
+                        }
+                        this._sms.sendSms(user.phone, new_code, (err, m, d) => {
+                            if(err){
+                                this._logger.error(err);
+                                return cb ? cb() : null;
+                            }
+                            return cb ? cb() : null;
+                        });
+                    });
+                }else{
+                    code = {
+                        user_id: user.id,
+                        code: new_code
+                    };
+                    this._db.CodesRepository.saveCode(code, (err, c) => {
+                        if(err){
+                            this._logger.error(err);
+                            return cb ? cb() : null;
+                        }
+                        this._sms.sendSms(user.phone, new_code, (err, m, d) => {
+                            if(err){
+                                this._logger.error(err);
+                                return cb ? cb() : null;
+                            }
+                            socket.emit(emits.INPUT_PHONE_CONFIRM_CODE);
+                            return cb ? cb() : null;
+                        })
+                    });
+                }
+            });
+        });
     }
 
     register(socket, data, cb){
@@ -45,8 +115,14 @@ class RegisterController{
                 this.logError(err);
                 return cb ? cb() : null;
             }
-            socket.emit(emits.PHONE_UNCONFIRMED, {data: { user_id: user.id, phone: user.phone}});
-            return cb ? cb() : null;
+            this._cache.ClientsContainer.addClient(socket, user, (err, io_client) => {
+                if(err){
+                    this._logger.error(err);
+                    return cb ? cb() : null;
+                }
+                socket.emit(emits.PHONE_UNCONFIRMED, {data: user});
+                return cb ? cb() : null;
+            });
         });
     }
 

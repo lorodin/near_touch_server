@@ -13,7 +13,8 @@ const EMITS = {
     COMPANON_EXIT: 'c_exit',
     COMPANON_CLOSE_ROOM: 'c_close_room',
     UNREGISTRATE: 'unregistrate',
-    ERROR: 'error'
+    ERROR: 'error',
+    INPUT_PHONE_CONFIRM_CODE: 'confirm_code'
 }
 
 module.exports = EMITS;
