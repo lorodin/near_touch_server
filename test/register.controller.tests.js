@@ -79,6 +79,118 @@ describe('Test register controller', () => {
     });
 
 
+    describe('Confirm action cmd', () => {
+        it('Confirm code and remove old user with this phone', (done) => { 
+            u_repository.saveUser(user_not_registrate, (err, user) => {
+                assert(err == null);
+                c_repository.saveCode({user_id: user.id, code: '1111'}, (err, code) => {
+                    let action = new ActionModel(socket_2.id, cmds.VALIDATE_CODE, {
+                        user_id: user.id,
+                        phone:user.phone,
+                        code: '1111'
+                    });
+                    let codes_length = db.codes.length;
+                    let users_length = db.users.length;
+                    controller.setAction(action, () => {
+                        assert(logger.history.length == 0);
+                        let emit = socket_2.emit_history.pop();
+                        assert(emit.cmd == emits.NO_ROOM, 'Emit not NO_ROOM: ' + emit.cmd);
+                        assert(codes_length == db.codes.length + 1, 'Codes length not correct ' + codes_length + ' ' + db.codes.length);
+                        assert(users_length == db.users.length + 1);
+                        u_repository.findUserById(user.id, (err, c_user) => {
+                            assert(err == null);
+                            assert(c_user != null);
+                            assert(c_user.name == user_not_registrate.name);
+                            assert(c_user.phone == user_not_registrate.phone);
+                            done();
+                        });
+                    });
+                });
+            }); 
+        });
+        describe('Controller errors', () => {
+            it('Error model', (done) => {
+                let action = new ActionModel(socket_1.id, cmds.VALIDATE_CODE, {
+
+                });
+                controller.setAction(action, () => {
+                    let emit = socket_1.emit_history.pop();
+                    assert(emit != null);
+                    assert(emit.cmd == emits.ERROR);
+                    assert(emit.data.msg == error_messages.ERROR_MODEL);
+                    done();
+                });
+            });
+            it('Code not found', (done) => {
+                u_repository.saveUser(user_not_registrate, (err, user) => {
+                    assert(err == null);
+                    assert(user != null);
+                    let action = new ActionModel(socket_2.id, cmds.VALIDATE_CODE, {
+                        user_id: user.id,
+                        phone: user.phone,
+                        code: '-1'
+                    });
+                    controller.setAction(action, () => {
+                        let emit = socket_2.emit_history.pop();
+                        assert(emit != null);
+                        assert(emit.cmd == emits.ERROR);
+                        assert(emit.data.msg == error_messages.CODE_NOT_FOUND);
+                        done();
+                    });
+                });
+            });
+            it('Code not valid', (done) => {
+                u_repository.saveUser(user_not_registrate, (err, user) => {
+                    assert(err == null);
+                    assert(user != null);
+                    c_repository.saveCode({
+                        user_id: user.id,
+                        code: '1111'
+                    }, (err, code) => {
+                        assert(err == null);
+                        assert(code != null);
+                        let action = new ActionModel(socket_2.id, cmds.VALIDATE_CODE, {
+                            user_id: user.id,
+                            phone: user.phone,
+                            code: '2222'
+                        });
+                        controller.setAction(action, () => {
+                            let emit = socket_2.emit_history.pop();
+                            assert(emit != null);
+                            assert(emit.cmd == emits.ERROR);
+                            assert(emit.data.msg == error_messages.CODE_NOT_VALID);
+                            done();
+                        });
+                    });
+                })
+            });
+            it('Users not found', (done) => {
+                u_repository.saveUser(user_not_registrate, (err, user) => {
+                    assert(err == null);
+                    assert(user != null);
+                    c_repository.saveCode({
+                        user_id: user.id,
+                        code: '1111'
+                    }, (err, code)=>{
+                        assert(err == null);
+                        assert(code != null);
+                        let action = new ActionModel(socket_2.id, cmds.VALIDATE_CODE, {
+                            user_id: user.id,
+                            phone: '-1',
+                            code: code.code
+                        });
+                        controller.setAction(action, () => {
+                            let emit = socket_2.emit_history.pop();
+                            assert(emit.cmd == emits.ERROR);
+                            assert(emit.data.msg == error_messages.USER_NOT_FOUND);
+                            done();
+                        });
+                    });
+                });
+            });
+        });
+    });
+
     describe('Registrate action cmd', () => {
         it('Register new user', (done) => {
             let action = new ActionModel(socket_1.id, cmds.REGISTER, {
@@ -212,9 +324,6 @@ describe('Test register controller', () => {
     });
 
 
-    describe('Confirm action cmd', () => {
-        
-    });
 
     afterEach((done) => {
         db.rooms = [];

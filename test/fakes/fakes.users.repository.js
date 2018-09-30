@@ -16,6 +16,23 @@ class FakeUsersRepository{
         return cb(null, result);
     }
 
+    findManyAndRemove(ids, cb){
+        if(ids.length == 0)
+            return cb(null, []);
+        
+        let result_array = [];
+
+        for(let i = 0; i < ids.length; i++){
+            let find = this.db.users.find(u => u.id == ids[i]);
+            if(!find) continue;
+            let index = this.db.users.indexOf(find);
+            result_array.push(find);
+            this.db.users.splice(index, 1);
+        }
+
+        return cb(null, {n: result_array.length, k: 1});
+    }   
+
     removeUserById(id, cb){
         let find = this.db.users.find(u => u.id == id);
         if(!find) return cb(null, null);

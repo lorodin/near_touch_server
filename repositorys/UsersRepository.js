@@ -14,8 +14,20 @@ class UserRepository{
         db.User.find({phone: phone}, cb);
     }
 
+    findManyAndRemove(ids, cb){
+        if(ids == null || ids.length == 0) return cb(null, []);
+        // for(let i = 0;i < ids.length; i++){
+        //     ids[i] = "ObjectId('" + ids[i] + "')";
+        // }
+        db.User.deleteMany({_id: {$in: ids}}, cb);
+    }
+
     removeUserById(id, cb){
         db.User.findByIdAndDelete(id, cb);
+    }
+
+    count(cb){
+        db.User.countDocuments(cb);
     }
 
     saveUser(user, cb){

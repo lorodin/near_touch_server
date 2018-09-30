@@ -144,12 +144,11 @@ class RegisterController{
             }
             
             if(!code){
-                this.logError(error_messages.CODE_NOT_FOUND);
                 socket.emit(emits.ERROR, {msg: error_messages.CODE_NOT_FOUND});
                 return cb ? cb() : null;
             }
 
-            if(code != data.code){
+            if(code.code != data.code){
                 socket.emit(emits.ERROR, {msg: error_messages.CODE_NOT_VALID});
                 return cb ? cb() : null;
             }
@@ -170,6 +169,7 @@ class RegisterController{
                     }
                     
                     let current_user = users.find(u => u.id == data.user_id);
+                    
                     if(!current_user){
                         socket.emit(emits.ERROR, {msg: error_messages.USER_NOT_FOUND});
                         return cb ? cb() : null;
@@ -178,20 +178,16 @@ class RegisterController{
                     let r_users = users.filter(u => u.id != data.user_id);
 
                     if(r_users && r_users.length != 0){
-                        let index = 0;
-                        let error = undefined;
-                        r_users.forEach((v) => {
-                            this._db.UsersRepository.removeUserById(v.id, (err, user) => {
-                                if(err) error = err;
-                                
-                                if(!error && index++ >= r_users.length){
-                                    socket.emit(emits.NO_ROOM);
-                                    return cb ? cb() : null;
-                                }else if(error){
-                                    return;
-                                }
-                            });
-                            if(error) return cb ? cb() : null; 
+                        let ids = r_users.map((c_v, i, a) => {
+                            return c_v.id;
+                        });
+                        this._db.UsersRepository.findManyAndRemove(ids, (err, r) =>{
+                            if(err){
+                                this.logError(err);
+                                return cb ? cb() : null;
+                            }
+                            socket.emit(emits.NO_ROOM);
+                            return cb ? cb() : null;
                         });
                     }else{
                        socket.emit(emits.NO_ROOM);

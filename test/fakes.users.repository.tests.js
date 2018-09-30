@@ -61,19 +61,6 @@ describe('Fake users repository', () => {
             
             assert(users.length == 2, 'Users length not 2: ' + users.length);
             
-            let u1 = users.find(u => u.id == user_1.id);
-            let u2 = users.find(u => u.id == user_3.id);
-
-            assert(u1.id == user_1.id);
-            assert(u1.name == user_1.name);
-            assert(u1.phone == user_1.phone);
-            assert(u1.phone_confirm == user_1.phone_confirm);
-
-            assert(u2.id == user_3.id);
-            assert(u2.name == user_3.name);
-            assert(u2.phone == user_3.phone);
-            assert(u2.phone_confirm == user_3.phone_confirm);
-
             done();
         });
     });
@@ -97,6 +84,16 @@ describe('Fake users repository', () => {
         });
     });
 
+    it('Find many users by id array', (done) => {
+        let users_length = fake_db.users.length;
+        repository.findManyAndRemove([user_1.id, user_2.id, user_3.id], (err, result) => {
+            assert(err == null);
+            assert(result.n == 3);
+            assert(result.k == 1);
+            assert(users_length == fake_db.users.length + 3);
+            done();
+        });
+    });
 
     
     it('Update old user', (done) => {
@@ -117,13 +114,10 @@ describe('Fake users repository', () => {
     afterEach((done) => {
         repository.removeUserById(user_1.id, (err, user1) => {
             assert(err == null);
-            assert(user1 != null);
             repository.removeUserById(user_2.id, (err, user2) => {
                 assert(err == null)
-                assert(user2 != null);
                 repository.removeUserById(user_3.id, (err, user3) => {
                     assert(err == null);
-                    assert(user3 != null);
                     done();
                 });
             });

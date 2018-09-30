@@ -140,6 +140,23 @@ describe('Test users repository', () => {
         });
     });
 
+    it('Find many and remove by ids', (done) => {
+        repository.count((err, count) => {
+            let users_length = count;
+            assert(err == null);
+            repository.findManyAndRemove([user_1.id, user_2.id, user_3.id], (err, result) => {
+                assert(err == null);
+                repository.count((err, count_2) => {
+                    assert(err == null);
+                    assert(users_length == count_2  + 3);
+                    assert(result.n == 3);
+                    assert(result.ok == 1);
+                    done();
+                })
+            });
+        });
+    })
+
     // Если что-то пошло не так, то на всякий случай удаляем всех пользователей
     afterEach((done) => {
         repository.removeUserById(user_1.id, (err, u1) => {
