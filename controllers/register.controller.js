@@ -174,25 +174,42 @@ class RegisterController{
                         socket.emit(emits.ERROR, {msg: error_messages.USER_NOT_FOUND});
                         return cb ? cb() : null;
                     }
+                    
+                    current_user.phone_confirm = true;
 
-                    let r_users = users.filter(u => u.id != data.user_id);
-
-                    if(r_users && r_users.length != 0){
-                        let ids = r_users.map((c_v, i, a) => {
-                            return c_v.id;
-                        });
-                        this._db.UsersRepository.findManyAndRemove(ids, (err, r) =>{
-                            if(err){
-                                this.logError(err);
-                                return cb ? cb() : null;
-                            }
-                            socket.emit(emits.NO_ROOM);
-                            return cb ? cb() : null;
-                        });
-                    }else{
-                       socket.emit(emits.NO_ROOM);
-                       return cb ? cb() : null;
-                    }
+                    this._db.UsersRepository.saveUser(current_user, (err, u) => {
+                        let r_users = users.filter(u => u.id != data.user_id);
+                        let old_confirmed_user = r_users.find(u => u.phone_confirm);
+                        
+                        if(r_users && r_users.length != 0){
+                            let ids = r_users.map((c_v, i, a) => {
+                                return c_v.id;
+                            });
+                            this._db.UsersRepository.findManyAndRemove(ids, (err, r) =>{
+                                if(err){
+                                    this.logError(err);
+                                    return cb ? cb() : null;
+                                }
+                                if(old_confirmed_user){
+                                    this._cache.ClientsContainer.findClientByUserId(old_confirmed_user.id, (err, client) => {
+                                        if(err){
+                                            this.setError(err);
+                                            return cb ? cb() : null;
+                                        }
+                                        if(client) client.socket.emit(emits.UNREGISTRATE);
+                                        socket.emit(emits.NO_ROOM);
+                                        return cb ? cb() : null;
+                                    });
+                                }else{
+                                    socket.emit(emits.NO_ROOM);
+                                    return cb ? cb() : null;
+                                }
+                            });
+                        }else{
+                           socket.emit(emits.NO_ROOM);
+                           return cb ? cb() : null;
+                        }
+                    });
                 });
             });
         });

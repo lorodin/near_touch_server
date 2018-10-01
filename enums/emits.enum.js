@@ -2,7 +2,7 @@ const EMITS = {
     USER_UNREGISTRATE: 'user_unregistrate',
     PHONE_UNCONFIRMED: 'phone_unconfirmed',
     NO_ROOM: 'no_room',
-    HASE_SENTENCE: 'has_sentence',
+    HAS_SENTENCE: 'has_sentence',
     YOUR_SENTENCE_NOT_CONFIRM: 'your_sentence_not_confirm',
     HAS_ROOM_0: 'has_room_0',
     HAS_ROOM_1: 'has_room_1',
@@ -14,7 +14,9 @@ const EMITS = {
     COMPANON_CLOSE_ROOM: 'c_close_room',
     UNREGISTRATE: 'unregistrate',
     ERROR: 'error',
-    INPUT_PHONE_CONFIRM_CODE: 'confirm_code'
+    INFO: 'info',
+    INPUT_PHONE_CONFIRM_CODE: 'confirm_code',
+    USER_BUSY: 'user_busy'
 }
 
 module.exports = EMITS;

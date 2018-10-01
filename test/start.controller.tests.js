@@ -238,6 +238,10 @@ describe('Start controller', () => {
                 let emit_2 = socket_2.emit_history.pop();
                 assert(logger.history.length == 0);
                 assert(emit_2.cmd == emits.HAS_ROOM_1);
+                let emit_1_2 = socket_1.emit_history.pop();
+                assert(emit_1_2.cmd == emits.HAS_ROOM_1);
+                assert(emit_2.data.room_id == room_1.id);
+                assert(emit_1_2.data.room_id == room_1.id);
                 done();
             });
         })

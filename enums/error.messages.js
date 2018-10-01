@@ -13,5 +13,11 @@ module.exports = {
     SOCKET_EXISTS: 'Socket exists',
     SOCKET_NOT_FOUND: 'Socket not found',
     CLIETN_NOT_CREATED: 'Client not created',
-    CODE_NOT_VALID: 'Incorrect code'
+    CODE_NOT_VALID: 'Incorrect code',
+    USER_NOT_CONFIRM: 'User not confirm phone',
+    COMPANON_NOT_REGISTER: 'Companon not register',
+    UNKNOW_ERROR: 'Unknow error',
+    NOT_ACCESS_FOR_CONFIRM_ROOM: 'Not access to confirm this room',
+    CAN_NOT_CREATE_ROOM: 'You can create room',
+    IO_ROOM_NOT_CREATED: 'Io room not created'
 }

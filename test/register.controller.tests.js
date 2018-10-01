@@ -48,15 +48,12 @@ describe('Test register controller', () => {
         phone_confirm: true
     };
 
-    let user_not_confirm = {
-        name: 'Alisa',
-        phone: '2222'
-    };
-
     let socket_1 = new FakeSocket('1');
     let socket_2 = new FakeSocket('2');
     let socket_3 = new FakeSocket('3');
     
+    let old_client = undefined;
+
     beforeEach((done) => {
         s_container.push(socket_1, (err, s1) => {
             assert(err == null, 'Error not null: ' + err);
@@ -71,8 +68,13 @@ describe('Test register controller', () => {
                         assert(err == null);
                         assert(db.users.length == 1);
                         registrate_user = user;
-                        done();
-                    })
+                        c_container.addClient(socket_3, registrate_user, (err, client) => {
+                            assert(err == null);
+                            assert(client != null);
+                            old_client = client;
+                            done();
+                        });
+                    });
                 });
             });
         });
@@ -86,7 +88,7 @@ describe('Test register controller', () => {
                 c_repository.saveCode({user_id: user.id, code: '1111'}, (err, code) => {
                     let action = new ActionModel(socket_2.id, cmds.VALIDATE_CODE, {
                         user_id: user.id,
-                        phone:user.phone,
+                        phone: user.phone,
                         code: '1111'
                     });
                     let codes_length = db.codes.length;
@@ -102,7 +104,14 @@ describe('Test register controller', () => {
                             assert(c_user != null);
                             assert(c_user.name == user_not_registrate.name);
                             assert(c_user.phone == user_not_registrate.phone);
-                            done();
+                            assert(c_user.phone_confirm == true);
+                            u_repository.findUserById(registrate_user.id, (err, u) => {
+                                assert(err == null);
+                                assert(u == null);
+                                let emit = old_client.socket.emit_history.pop();
+                                assert(emit.cmd == emits.UNREGISTRATE);
+                                done();
+                            });
                         });
                     });
                 });
@@ -201,7 +210,7 @@ describe('Test register controller', () => {
             controller.setAction(action, () => {
                 s_container.get(socket_1.id, (err, s) => {
                     assert(err == null, 'Err not null: ' + err);
-                    let emit = s.emit_history[0];// TODO: Пределать 
+                    let emit = s.emit_history.pop(); 
                     assert(logger.history.length == 0, 'History not empty: ' + logger.msgToString(0));
                     assert(emit.cmd == emits.PHONE_UNCONFIRMED, 'CMD Not Phone_unconfirmed' + emit.cmd);
                     assert(emit.data.data.name == user_not_registrate.name, 'Names not equals: ' + emit.data.data.name + ' ' + user_not_registrate.name);

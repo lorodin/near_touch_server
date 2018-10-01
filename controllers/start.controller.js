@@ -1,6 +1,7 @@
 const cmds = require('../enums/cmd.enum');
 const emits = require('../enums/emits.enum');
 const error_messages = require('../enums/error.messages');
+const IORoom = new require('../models/IORoom');
 
 class StartController{
     constructor(cache_service, database_service, logger, configs){
@@ -58,12 +59,12 @@ class StartController{
                 return cb ? cb() : null;
             }
             
-            this.CahceService.ClientsContainer.addClient(socket, user, (err, io_client) => {
+            this.CahceService.ClientsContainer.addClient(socket, user, (err, io_client_1) => {
                 if(err){
                     this.logError(err);
                     return cb ? cb() : null;
                 } 
-                if(io_client == null){
+                if(io_client_1 == null){
                     this.logError(error_messages.CLIETN_NOT_CREATED);
                     return cb ? cb() : null;
                 } 
@@ -115,20 +116,35 @@ class StartController{
                             return cb ? cb() : null;
                         } 
 
-                        this.CahceService.ClientsContainer.findClientByUserId((room.from == user.id ? room.to : room.from), (err, io_client) => {
+                        this.CahceService.ClientsContainer.findClientByUserId((room.from == user.id ? room.to : room.from), (err, io_client_2) => {
                             if(err){
                                 this.logError(err);  
                                 return cb ? cb() : null;
                             }   
                             
-                            if(io_client == null){
-                                socket.emit(emits.HAS_ROOM_0);
+                            if(io_client_2 == null){
+                                socket.emit(emits.HAS_ROOM_0, {room_id: room.id});
                                 return cb ? cb() : null;
                             } 
 
-                            socket.emit(emits.HAS_ROOM_1);
+                            let io_room = new IORoom([io_client_1, io_client_2], room);
 
-                            return cb ? cb() : null;
+                            this.CahceService.RoomsContainer.addRoom(io_room, (err, saved_io_room) => {
+                                if(err){
+                                    this.logError(err);
+                                    return cb ? cb() : null;
+                                }
+
+                                if(saved_io_room == null){
+                                    this.logError(error_messages.IO_ROOM_NOT_CREATED);
+                                    return cb ? cb() : null;
+                                }
+
+                                socket.emit(emits.HAS_ROOM_1, {room_id: room.id});
+                                io_client_2.socket.emit(emits.HAS_ROOM_1, {room_id: room.id});
+
+                                return cb ? cb() : null;
+                            });
                         })
                     });
                 }
