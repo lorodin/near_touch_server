@@ -26,7 +26,6 @@ describe('Test fake socket.io', () => {
         let tests = 0;
 
         socket.on('test_cmd_1', (data) => {
-            console.log(data);
             assert(data.id == data_1.id, 'Test first listener');
             tests++;
             let find_cmd = socket.commands_history.find(c => c.cmd == 'test_cmd_1');
