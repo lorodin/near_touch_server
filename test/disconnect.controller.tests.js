@@ -26,137 +26,197 @@ const error_messages = require('../enums/error.messages');
 const assert = require('assert');
 
 describe('Disconnect controller', () => {
-    let logger = new FakeLogger();
-    
     let db = new FakeDataBase();
-    let c_repository = new FakeCodesRepository(db);
     let u_repository = new FakeUsersRepository(db);
     let r_repository = new FakeRoomsRepository(db);
-    
+    let c_repository = new FakeCodesRepository(db);
     let db_service = new DataBaseService(u_repository, r_repository, c_repository);
+
+    let logger = new FakeLogger();
+
+    let io_r_container = new IORoomsContainer();
+    let io_c_container = new IOClientsContainer();
+    let io_s_container = new SocketsContainer();
+    let cache = new CacheService(io_c_container, io_r_container, io_s_container);
+
+    let controller = new DisconnectController(cache, db_service, logger);
+
+    let user_1 = {name: 'Ivan', phone: '1111', phone_confirm: true};
+    let user_2 = {name: 'Igor', phone: '2222', phone_confirm: true};
+    let user_3 = {name: 'Oleg', phone: '3333', phone_confirm: true};
+    let user_4 = {name: 'Sveta', phone: '4444', phone_confirm: true};
+    let user_5 = {name: 'Olesa', phone: '5555', phone_confirm: true};
+
+    let socket_1 = new FakeSocket('1');
+    let socket_2 = new FakeSocket('2');
+    let socket_3 = new FakeSocket('3');
+    let socket_4 = new FakeSocket('4');
     
-    let r_container = new IORoomsContainer();
-    let c_container = new IOClientsContainer();
-    let s_container = new SocketsContainer();
+    let room_1 = undefined;
+    let room_2 = undefined;
 
-    let cache_service = new CacheService(c_container, r_container, s_container);
+    let io_client_1 = undefined;
+    let io_client_2 = undefined;
+    let io_client_3 = undefined;
+    let io_client_4 = undefined;
 
-    let controller = new DisconnectController(cache_service, db_service, logger);
+    let io_room = undefined;
 
-
-
-    //1) before В подготовке создается активная комната с двумя пользователями
-    //   при отключение пользователя, он удаляется из кэша, второму пользователю
-    //   отправляется сообщение HAS_ROOM_0 (комната есть, но она не активна)
-    //   состояние комнаты сохраняется в базу, комната удаляется из кэша
-    //2) before Создается пользователь с комнатой но не активной
-    //   пользователь удаляется из кэша
-    //3) before Создается пользователь без комнаты
-    //   пользователь удаляется из кэша и из sockets.container
-    
-    let users = [
-        {'id': 1, 'name': 'Vasy', 'phone': '123', 'phone_confirm': true},
-        {'id': 2, 'name': 'Igor', 'phone': '321', 'phone_confirm': true},
-        {'id': 3, 'name': 'Larisa', 'phone': '222', 'phone_confirm': true},
-        {'id': 4, 'name': 'Nasty', 'phone': '333', 'phone_confirm': true},
-        {'id': 5, 'name': 'Oleg', 'phone': '444', 'phone_confirm': true}
-    ];
-
-    let sockets = [
-        new FakeSocket(1),
-        new FakeSocket(2),
-        new FakeSocket(3),
-        new FakeSocket(4)
-    ];
-
-    let rooms = [
-        {'id': 1, 'from': 1, 'to': 2, 'confirm': true, 'points': 0},
-        {'id': 2, 'from': 3, 'to': 5, 'confirm': true, 'points': 0}
-    ];
-
-    let io_clients = [
-        new IOClients(users[0], sockets[0]),
-        new IOClients(users[1], sockets[1]),
-        new IOClients(users[2], sockets[2]),
-        new IOClients(users[3], sockets[3])
-    ];
-
-    let io_rooms = [
-        new IORoom([io_clients[0], io_clients[1]], rooms[0])
-    ];
-
-    beforeEach(() => {
-        db.users = users;
-        db.rooms = rooms;
-        s_container.sockets = sockets;
-        c_container.clients = io_clients;
-        r_container.rooms = io_rooms;
+    beforeEach((done) => {
+        u_repository.saveUser(user_1, (err, user1) => {
+            assert(!err);
+            user_1 = user1;
+            u_repository.saveUser(user_2, (err, user2) => {
+                assert(!err);
+                user_2 = user2;
+                u_repository.saveUser(user_3, (err, user3) => {
+                    assert(!err);
+                    user_3 = user3;
+                    u_repository.saveUser(user_4, (err, user4) => {
+                        assert(!err);
+                        user_4 = user4;
+                        u_repository.saveUser(user_5, (err, user5) => {
+                            assert(!err);
+                            user_5 = user5;
+                            io_s_container.push(socket_1, (err, socket1) => {
+                                assert(!err, 'Error not null: ' + err);
+                                socket_1 = socket1;
+                                io_s_container.push(socket_2, (err, socket2) => {
+                                    assert(!err);
+                                    socket_2 = socket2;
+                                    io_s_container.push(socket_3, (err, socket3) => {
+                                        assert(!err);
+                                        socket_3 = socket3;
+                                        io_s_container.push(socket_4, (err, socket4) => {
+                                            assert(!err);
+                                            socket_4 = socket4;
+                                            io_c_container.addClient(socket_1, user_1, (err, client1) => {
+                                                assert(!err);
+                                                io_client_1 = client1;
+                                                io_c_container.addClient(socket_2, user_2, (err, client2) => {
+                                                    assert(!err);
+                                                    io_client_2 = client2;
+                                                    io_c_container.addClient(socket_3, user_3, (err, client3) => {
+                                                        assert(!err);
+                                                        io_client_3 = client3;
+                                                        io_c_container.addClient(socket_4, user_4, (err, client4) => {
+                                                            assert(!err);
+                                                            io_client_4 = client4;
+                                                            room_1 = {
+                                                                from: user_1.id,
+                                                                to: user_2.id,
+                                                                confirm: true
+                                                            };
+                                                            room_2 = {
+                                                                from: user_3.id,
+                                                                to: user_5.id,
+                                                                confirm: true
+                                                            };
+                                                            r_repository.saveRoom(room_1, (err, room1) => {
+                                                                assert(!err);
+                                                                room_1 = room1;
+                                                                r_repository.saveRoom(room_2, (err, room2) => {
+                                                                    assert(!err);
+                                                                    room_2 = room2;
+                                                                    io_room = new IORoom([io_client_1, io_client_2], room_1);
+                                                                    io_r_container.addRoom(io_room, (err, room) => {
+                                                                        assert(!err);
+                                                                        io_room = room;
+                                                                        done();
+                                                                    });               
+                                                                });
+                                                            });
+                                                        });                                   
+                                                    });
+                                                });
+                                            });
+                                        })
+                                    })
+                                })
+                            });
+                        });
+                    });
+                });
+            });
+        });
     });
 
-    describe('Disconnect client from active room', () => {
-        it('Disconnect and save room state', (done) => {
-            let action = new ActionModel(sockets[0].id, cmds.DISCONNECT);
-            let s_length = s_container.count();
-            let c_length = c_container.count();
-            let r_length = r_container.count();
-            rooms[0].points = 100;
-            controller.setAction(action, () => {
-                assert(logger.history.length == 0);
-                assert(sockets[0].emit_history.length == 0);
-                let emit_2 = sockets[1].emit_history.pop();
-                assert(emit_2.cmd == emits.HAS_ROOM_0);
-                assert(r_length - 1 == r_container.count());
-                assert(c_length - 1 == c_container.count());
-                assert(s_length - 1 == s_container.count());
-                assert(db.rooms[0].points == 100);
+    it('Disconnect client from active room and update room to db', (done) => {
+        let action = new ActionModel(socket_1.id, cmds.DISCONNECT, null);
+        io_room.room.points = 100;
+        let length_clients = io_c_container.count();
+        let length_rooms = io_r_container.count();
+        let length_sockets = io_s_container.count();
+        controller.setAction(action, () => {
+            assert(logger.history.length == 0);
+            assert(socket_1.emit_history.length == 0);
+            assert(socket_2.emit_history.length == 1);
+            assert(socket_2.emit_history[0].cmd == emits.HAS_ROOM_0);
+            assert(length_clients - 1 == io_c_container.count());
+            assert(length_rooms - 1 == io_r_container.count());
+            assert(length_sockets - 1 == io_s_container.count());
+            assert(db.rooms.length == 2, 'DB ROOM NOT 1: ' + db.rooms.length);
+            assert(db.rooms.find(r => r.id == room_1.id).points == 100);
+            let find_c = io_c_container.clients[socket_1.id];
+            let find_s = io_s_container.sockets.find(s => s.id == socket_1.id);
+            assert(!find_c);
+            assert(!find_s);
+            io_r_container.findRoomBySocketId(socket_1.id, (err, room) => {
+                assert(!err);
+                assert(!room);
                 done();
             });
         });
     });
 
-    describe('Disconnect client from not active room', () => {
-        it('Disconnect client', (done) => {
-            let action = new ActionModel(sockets[2].id, cmds.DISCONNECT);
-            let s_length = s_container.count();
-            let c_length = c_container.count();
-            let r_length = r_container.count();
-            controller.setAction(action, () => {
-                assert(logger.history.length == 0);
-                assert(sockets[2].emit_history.length == 0);
-                assert(r_length == r_container.count());
-                assert(c_length - 1 == c_container.count());
-                assert(s_length - 1 == s_container.count());
-                done();
-            });
+    it('Disconnect client from not active room', (done) => {
+        let action = new ActionModel(socket_3.id, cmds.DISCONNECT, null);
+        let length_clients = io_c_container.count();
+        let length_rooms = io_r_container.count();
+        let length_sockets = io_s_container.count();
+        controller.setAction(action, () => {
+            assert(logger.history.length == 0);
+            assert(length_clients - 1 == io_c_container.count());
+            assert(length_rooms == io_r_container.count());
+            assert(length_sockets - 1 == io_s_container.count());
+            assert(!(socket_3.id in io_c_container.clients));
+            assert(!(io_s_container.sockets.find(s => s.id == socket_3.id)));
+            done();
         });
     });
 
-    describe('Disconnect client without room', () => {
-        it('Disconnect client', (done) => {
-            let action = new ActionModel(sockets[3].id, cmds.DISCONNECT);
-            let s_length = s_container.count();
-            let r_length = r_container.count();
-            let c_length = c_container.count();
-            controller.setAction(action, () => {
-                assert(logger.history.length == 0);
-                assert(sockets[3].emit_history.length == 0);
-                assert(s_length == s_container.count());
-                assert(r_length == r_container.count());
-                assert(c_length == c_container.count());
-                done();
-            });
+    it('Disconnect client without room', (done) => {
+        let action = new ActionModel(socket_4.id, cmds.DISCONNECT, null);
+        let length_clients = io_c_container.count();
+        let length_rooms = io_r_container.count();
+        let length_sockets = io_s_container.count();
+        controller.setAction(action, () => {
+            assert(logger.history.length == 0);
+            assert(length_clients - 1 == io_c_container.count());
+            assert(length_rooms == io_r_container.count());
+            assert(length_sockets - 1 == io_s_container.count(), 'Socket not removed: ' + length_sockets + ' ' + io_s_container.count());
+            for(let key in io_c_container.clients) assert(key != socket_4.id);
+            assert(!(io_s_container.sockets.find(s => s.id == socket_4.id)));
+            done();
+        });
+    });
+
+    it('Error, client not found', (done) => {
+        let action = new ActionModel(3333, cmds.DISCONNECT, null);
+        controller.setAction(action, () => {
+            let log = logger.history.pop();
+            assert(log.type == 'error');
+            assert(log.msg == error_messages.CLIENT_NOT_FOUND);
+            done();
         });
     });
 
     afterEach(() => {
-        db.users = [];
+        logger.history = [];
+        io_r_container.rooms = {};
+        io_c_container.clients = {};
+        io_s_container.sockets = [];
         db.rooms = [];
-        s_container.sockets = [];
-        c_container.clients = [];
-        r_container.rooms = [];
-    });
+        db.users = [];
+    })
 });
-
-let lengthPropertyes = (obj) => {
-    return Object.keys(obj).length;
-}

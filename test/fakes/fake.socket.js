@@ -24,7 +24,7 @@ class FakeSocket{
     emit(cmd, data, cb){
         let model = {cmd: cmd, data: data};
         this.emit_history.push(model);
-        cb ? cb(model): 0;
+        return cb ? cb(model): 0;
     }
 
     removeListener(cmd){
