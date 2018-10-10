@@ -6,6 +6,10 @@ class IOClientsContainer{
         this.clients = {};
     }
 
+    count(){
+        return Object.keys(this.clients).length;
+    }
+
     addClient(socket, user, cb){
         if(this.clients[socket.id]) return cb(error_messages.CLIENT_EXISTS);
 

@@ -6,6 +6,10 @@ class IORoomsContainer{
         this.rooms = {};
     }
 
+    count(){
+        return Object.keys(this.rooms).length;
+    }
+
     _validateRoom(io_room){
         let valid = io_room.room ? true : false;
             valid &= io_room.clients ? true : false;

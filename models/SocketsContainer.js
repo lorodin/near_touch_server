@@ -25,6 +25,10 @@ class SocketsContainer{
         this.sockets.splice(index, 1);
         return cb(null, find, index);
     }
+
+    count(){
+        return this.sockets.length;
+    }
 }
 
 module.exports = SocketsContainer;

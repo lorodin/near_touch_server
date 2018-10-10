@@ -9,3 +9,5 @@ class DisconnectController{
         
     }
 }
+
+module.exports = DisconnectController;
