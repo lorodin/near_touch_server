@@ -8,6 +8,26 @@ describe('Test fake socket.io', () => {
         socket.clear();
     });
 
+    // Проверка добавления/удаления слушателя для клиента
+    it('Add and remove emit listener', () => {
+        socket.onClientEmit('test_cmd_1', (data) => {});
+        assert(socket.emit_listeners['test_cmd_1'] != null);
+        socket.removeEmitListener('test_cmd_1');
+        assert(socket.emit_listeners['test_cmd_1'] == null);
+    });
+
+    // Проверка работы ClientEmitListener
+    it('Test client emit listener', (done) => {
+        let test_data = {id: 1};
+
+        socket.onClientEmit('test_cmd_1', (data) => {
+            assert(data.id == 1);
+            done();
+        });
+
+        socket.emit('test_cmd_1', test_data);
+    });
+
     // Проверка добавления/удаления слушателя в фейковый соккет
     it('Add and remove listener', () => {
         socket.on('test_cmd_1', (data) => {});

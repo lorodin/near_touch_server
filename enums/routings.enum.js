@@ -1,0 +1,3 @@
+module.exports = {
+    PLAY: 'play'
+};

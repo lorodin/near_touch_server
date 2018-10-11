@@ -2,6 +2,7 @@ class FakeSocket{
     constructor(id){
         this.id = id;
         this.listeners = {};
+        this.emit_listeners = {};
         this.commands_history = [];
         this.emit_history = [];
     }
@@ -9,6 +10,15 @@ class FakeSocket{
     on(cmd, cb){
         if(!this.listeners[cmd]) this.listeners[cmd] = [];
         this.listeners[cmd].push(cb);
+    }
+
+    onClientEmit(cmd, cb){
+        if(!this.emit_listeners[cmd]) this.emit_listeners[cmd] = [];
+        this.emit_listeners[cmd].push(cb);
+    }
+
+    removeEmitListener(cmd){
+        if(this.emit_listeners[cmd]) delete this.emit_listeners[cmd];
     }
 
     makeCmd(cmd, data){
@@ -24,6 +34,11 @@ class FakeSocket{
     emit(cmd, data, cb){
         let model = {cmd: cmd, data: data};
         this.emit_history.push(model);
+        
+        if(this.emit_listeners[cmd])
+            for(let i = 0; i < this.emit_listeners[cmd].length; i++)
+                this.emit_listeners[cmd][i](data);
+
         return cb ? cb(model): 0;
     }
 
@@ -35,6 +50,7 @@ class FakeSocket{
         this.emit_history = [];
         this.listeners = {};
         this.commands_history = [];
+        this.emit_listeners = {};
     }
 }
 

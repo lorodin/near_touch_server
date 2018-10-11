@@ -11,7 +11,8 @@ const CMDS = {
     EXIT_ROOM: 'exit_room',
     CLOSE_ROOM: 'close_room',
     DISCONNECT: 'disconnec',
-    GET_CODE: 'get_code'
+    GET_CODE: 'get_code',
+    CLIENT_REDY_TO_PLAY: 'client_redy_to_play'
 }
 
 module.exports = CMDS;
