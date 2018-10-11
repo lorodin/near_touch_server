@@ -12,6 +12,7 @@ const FakeUsersRepository = require('./fakes/fakes.users.repository');
 const FakeRoomsRepository = require('./fakes/fake.rooms.repository');
 const FakeCodesRepository = require('./fakes/fake.codes.repository');
 const FakeSocket = require('./fakes/fake.socket');
+const FakeLogger = require('./fakes/fake.logger');
 
 const IORoomsContainer = require('../models/IORoomsContainer');
 const IOClientsContainer = require('../models/IOClientsContainer');
@@ -35,7 +36,7 @@ describe('Play controller', () => {
     let cache_service = new CacheService(io_c_container, io_r_container, io_s_container);
 
     let configs = {'get_state_interval': 0, 
-                   'intevals': [
+                   'intervals': [
                        {'length': 2,  'points': 10},
                        {'length': 5,  'points': 5},
                        {'length': 10, 'points': 1}
@@ -91,11 +92,11 @@ describe('Play controller', () => {
                             room = r;
                             io_c_container.addClient(socket_1, user_1, (err, client1) => {
                                 assert(!err);
-                                client_1 = client1;
+                                io_client_1 = client1;
                                 io_c_container.addClient(socket_2, user_2, (err, client2) => {
                                     assert(!err);
-                                    client_2 = client2;
-                                    io_room = new IORoom([client_1, client2], room);
+                                    io_client_2 = client2;
+                                    io_room = new IORoom([io_client_1, io_client_2], room);
                                     io_r_container.addRoom(io_room, (err, io_r) => {
                                         assert(!err);
                                         io_room = io_r;
@@ -110,69 +111,110 @@ describe('Play controller', () => {
         });
     });
 
-    it('Server on touch down', (done) => {
-        let data_1 = {cmd: cmds.TOUCH_DOWN, x: 2, y: 2, room_id: room.id};
-        let data_2 = {cmd: cmds.TOUCH_DOWN, x: 1, y: 1, room_id: room.id};
-        
-        let number_action = 0;
-
-        socket_1.on(routings.PLAY, (req) => {
-            let action = new ActionModel(socket_1.id, req.cmd, req.data);
-            controller.setAction(action, () => {
-                assert(logger.history.length == 0);
-                let emit = socket_2.emit_history.pop();
-                assert(emit.cmd == emits.COMPANON_TOUCH_DOWN);
-                assert(emit.data.x == 2);
-                assert(emit.data.y == 2);
-                assert(emit.data.room.points == room.points);
-                assert(emit.data.room.id == room.id);
-                assert(emit.data.companon.id == user_1.id);
-                if(number_action++ >= 2) done();
-            });
-        });
-        
-        socket_2.on(routings.PLAY, (req) => {
-            let action = new ActionModel(socket_2.id, req.cmd, req.data);
-            controller.setAction(action, () => {
-                assert(logger.history.length == 0);
-                let emit = socket_1.emit_history.pop();
-                assert(emit.cmd == emits.COMPANON_TOUCH_DOWN);
-                assert(emit.data.x == 1);
-                assert(emit.data.y == 1);
-                assert(emit.data.room.points == room.points);
-                assert(emit.data.room.id == room.id);
-                assert(emit.data.companon.id == user_2.id);
-                if(number_action++ >= 2) done();
-            });
-        });
-
-        socket_1.makeCmd(routings.PLAY, data_1);
-        socket_2.makeCmd(routings.PLAY, data_2);
-    });
-
     it('GET_STATE after CLIENT_REDY', (done) => {
-        let data_1 = {cmd: cmds.TOUCH_DOWN, x: 3, y: 4, room_id: room.id};
-        let data_2 = {cmd: cmds.TOUCH_UP, room_id: room.id};
+        let client_1_cmds = [
+            {cmd: cmds.TOUCH_DOWN, x: 1, y: 1, room_id: room.id},
+            {cmd: cmds.TOUCH_DOWN, x: 3, y: 3, room_id: room.id},
+            {cmd: cmds.TOUCH_UP, room_id: room.id},
+            {cmd: cmds.TOUCH_DOWN, x: 10, y: 10, room_id: room.id},
+            {cmd: cmds.TOUCH_DOWN, x: 1, y: 1, room_id: room.id}
+        ];
 
-        let num_actions = 0;
+        let client_2_cmds = [
+            {cmd: cmds.TOUCH_DOWN, x: 2, y: 2, room_id: room.id},
+            {cmd: cmds.TOUCH_UP, room_id: room.id},
+            {cmd: cmds.TOUCH_DOWN, x: 1, y:1, room_id: room.id},
+            {cmd: cmds.TOUCH_UP, room_id: room.id},
+            {cmd: cmds.TOUCH_DOWN, x: 4, y: 5, room_id: room.id}
+        ];
+
+        let server_step = 0;
+        let step_complate = false;
+
+        let old_room_points = room.points;
+
+        let done_called = false;
 
         socket_1.onClientEmit(emits.GET_STATE, () => {
-            socket_1.makeCmd(routings.PLAY, data_1);
+            if(server_step == client_1_cmds.length){
+                assert(room.points == old_room_points + configs.intervals[0].points + configs.intervals[1].points);
+                if(!done_called){
+                    done_called = true;
+                    done();
+                }
+            } 
+            else{
+                socket_1.makeCmd(routings.PLAY, client_1_cmds[server_step]);
+            }
         });
         
         socket_2.onClientEmit(emits.GET_STATE, () => {
-            socket_2.makeCmd(routings.PLAY, data_2);
+            if(server_step == client_2_cmds.length) {
+                assert(room.points == old_room_points + configs.intervals[0].points + configs.intervals[1].points);
+                if(!done_called){
+                    done_called = true;
+                    done();
+                }
+            }
+            else {
+                socket_2.makeCmd(routings.PLAY, client_2_cmds[server_step]);
+            }
         });
+
+        socket_1.onClientEmit(emits.COMPANON_TOUCH_UP, (data) => {
+            assert(data.room_id == room.id);
+
+            if(step_complate){
+                step_complate = false;
+                server_step++;
+            }else{
+                step_complate = true;
+            }
+        });
+
+        socket_2.onClientEmit(emits.COMPANON_TOUCH_UP, (data) => {
+            assert(data.room_id == room.id);
+
+            if(step_complate){
+                step_complate = false;
+                server_step++;
+            }else{
+                step_complate = true;
+            }
+        });
+
+        socket_1.onClientEmit(emits.COMPANON_TOUCH_DOWN, (data) => {
+            assert(data.x == client_2_cmds[server_step].x);
+            assert(data.y == client_2_cmds[server_step].y);
+            assert(server_step == 0 || server_step == 2 || server_step == 4);
+            assert(data.room_id == room.id);
+
+            if(step_complate){
+                step_complate = false;
+                server_step++;
+            }else{
+                step_complate = true;
+            }
+        });
+
+        socket_2.onClientEmit(emits.COMPANON_TOUCH_DOWN, (data) => {
+            assert(data.x == client_1_cmds[server_step].x);
+            assert(data.y == client_1_cmds[server_step].y);
+            assert(server_step == 0 || server_step == 1 || server_step == 3 || server_step == 4);
+            assert(data.room_id == room.id);
+
+            if(step_complate){
+                step_complate = false;
+                server_step++;
+            }else{
+                step_complate = true;
+            }
+        })
 
         socket_1.on(routings.PLAY, (req)=>{
             let action = new ActionModel(socket_1.id, req.cmd, req);
             controller.setAction(action, () => {
                 assert(logger.history.length == 0);
-                let emit = socket_2.emit_history.pop();
-                assert(emit.cmd == emits.COMPANON_TOUCH_DOWN);
-                assert(emit.data.x == data_1.x);
-                assert(emit.data.y == data_1.y);
-                if(num_actions++ >= 2) done();
             });
         });
 
@@ -180,70 +222,11 @@ describe('Play controller', () => {
             let action = new ActionModel(socket_2.id, req.cmd, req);
             controller.setAction(action, () => {
                 assert(logger.history.length == 0);
-                let emit = socket_1.emit_history.pop();
-                assert(emit.cmd == emits.COMPANON_TOUCH_UP);
-                if(num_actions++ >= 2) done();
             });
         });
 
-        socket_1.makeCmd(routings.PLAY, {cmd: cmds.CLIENT_REDY_TO_PLAY});
-        socket_2.makeCmd(routings.PLAY, {cmd: cmds.CLIENT_REDY_TO_PLAY});
-    });
-
-    it('Calculate room points', (done) => {
-        let data_1 = {cmd: cmds.TOUCH_DOWN, x: 1, y: 1, room_id: room.id};
-        let data_2 = {cmd: cmds.TOUCH_DOWN, x: 2, y: 2, room_id: room.id};
-
-        let old_room_points = room.points;
-        let num_actions = 0;
-
-        socket_1.onClientEmit(emits.GET_STATE, () => {
-            socket_1.makeCmd(routings.PLAY, data_1);
-        });
-
-        socket_2.onClientEmit(emits.GET_STATE, () => {
-            socket_2.makeCmd(routings.PLAY, data_2);
-        });
-
-        socket_1.on(routings.PLAY, (req) => {
-            let action = new ActionModel(socket_1.id, req.cmd, req);
-            controller.setAction(action, () => {
-                assert(logger.history.length == 0);
-                let emit = socket_2.emit_history.pop();
-                assert(emit.cmd == emits.COMPANON_TOUCH_DOWN);
-                assert(emit.data.x == data_1.x);
-                assert(emit.data.y == data_1.y);
-                assert(emit.data.room_id == room.id);
-                
-                if(num_action++ >= 2){
-                    assert(room.points == old_room_points + configs.intevals[0].points);
-                    done();
-                }else{
-                    assert(room.points == old_room_points);
-                }
-            });
-        });
-
-        socket_2.on(routings.PLAY, (req) => {
-            let action = new ActionModel(socket_2.id, req.cmd, req);
-            controller.setAction(action, () => {
-                assert(logger.history.length == 0);
-                let emit = socket_1.emit_history.pop();
-                assert(emit.cmd == emits.COMPANON_TOUCH_DOWN);
-                assert(emit.data.x == data_1.x);
-                assert(emit.data.y == data_1.y);
-                assert(emit.data.room_id == room.id);
-                if(num_actions++ >= 2){
-                    assert(room.points == old_room_points + configs.intevals[0].points);
-                    done();
-                }else{
-                    assert(room.points == old_room_points);
-                }
-            });
-        });
-
-        socket_1.makeCmd(routings.PLAY, {cmd: cmds.CLIENT_REDY_TO_PLAY});
-        socket_2.makeCmd(routings.PLAY, {cmd: cmds.CLIENT_REDY_TO_PLAY});
+        socket_1.makeCmd(routings.PLAY, {cmd: cmds.CLIENT_REDY_TO_PLAY, room_id: room.id});
+        socket_2.makeCmd(routings.PLAY, {cmd: cmds.CLIENT_REDY_TO_PLAY, room_id: room.id});
     });
 
     afterEach(() => {

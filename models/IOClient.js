@@ -2,7 +2,7 @@ class IOClient{
     constructor(user, socket){
         this.user = user;
         this.socket = socket;
-        this.last_action = "";
+        this.last_action = undefined;
     }
 }
 
