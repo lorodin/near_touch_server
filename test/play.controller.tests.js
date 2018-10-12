@@ -111,6 +111,46 @@ describe('Play controller', () => {
         });
     });
 
+    it('Close room', (done) => {
+        let old_rooms_count = db.rooms.length;
+        let old_activ_rooms = io_r_container.count();
+        
+        socket_2.onClientEmit(emits.COMPANON_CLOSE_ROOM, () => {
+            assert(logger.history.length == 0);
+            assert(db.rooms.length == old_rooms_count - 1);
+            assert(io_r_container.count() == old_activ_rooms - 1);
+            done();
+        });
+
+        socket_1.onClientEmit(emits.GET_STATE, () => {
+            let action = new ActionModel(socket_1.id, cmds.CLOSE_ROOM, {room_id: room.id});
+            controller.setAction(action);
+        });
+
+        controller.setAction(new ActionModel(socket_1.id, cmds.CLIENT_REDY_TO_PLAY, {room_id: room.id}));
+        controller.setAction(new ActionModel(socket_2.id, cmds.CLIENT_REDY_TO_PLAY, {room_id: room.id}));
+    });
+
+    it('Exit room', (done) => {
+        let old_rooms_count = db.rooms.length;
+        let old_activ_rooms = io_r_container.count();
+
+        socket_2.onClientEmit(emits.COMPANON_EXIT, () => {
+            assert(logger.history.length == 0);
+            assert(db.rooms.length == old_rooms_count);
+            assert(io_r_container.count() == old_activ_rooms - 1);
+            done();
+        });
+
+        socket_1.onClientEmit(emits.GET_STATE, () => {
+            let action = new ActionModel(socket_1.id, cmds.EXIT_ROOM, {room_id: room.id});
+            controller.setAction(action);
+        });
+
+        controller.setAction(new ActionModel(socket_1.id, cmds.CLIENT_REDY_TO_PLAY, {room_id: room.id}));
+        controller.setAction(new ActionModel(socket_2.id, cmds.CLIENT_REDY_TO_PLAY, {room_id: room.id}));
+    });
+
     it('GET_STATE after CLIENT_REDY', (done) => {
         let client_1_cmds = [
             {cmd: cmds.TOUCH_DOWN, x: 1, y: 1, room_id: room.id},

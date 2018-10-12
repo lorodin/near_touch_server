@@ -26,6 +26,16 @@ class PlayController{
                         this.redyToPlay(client, action.data, cb);
                     }, 0);
                 break;
+                case cmds.EXIT_ROOM:
+                    setTimeout(()=>{
+                        this.exitRoom(client, action.data, cb);
+                    }, 0)
+                break;
+                case cmds.CLOSE_ROOM:
+                    setTimeout(() => {
+                        this.closeRoom(client, action.data, cb);
+                    }, 0);
+                break;
                 default:
                     setTimeout(() => {
                         this.clientAction(client, action, cb);
@@ -33,6 +43,66 @@ class PlayController{
                 break;
             }
         })
+    }
+
+    exitRoom(client, data, cb){
+        this._cache.RoomsContainer.findRoomById(data.room_id, (err, io_r) => {
+            if(err){
+                this.logError(err);
+                return cb ? cb() : null;
+            }
+            if(!io_r){
+                this.logError(error_messages.ROOM_NOT_FOUND);
+                return cb ? cb() : null;
+            }
+            let other_client = io_r.clients[0].socket.id == client.socket.id ? 
+                                    io_r.clients[1] : io_r.clients[0];
+            
+            this._db.RoomsRepository.saveRoom(io_r.room, (err, room) => {
+                if(err){
+                    this.logError(err);
+                    return cb ? cb() : null;
+                }
+                if(!room){
+                    this.logError(error_messages.ROOM_NOT_FOUND);
+                    return cb ? cb() : null;
+                }
+                this._cache.RoomsContainer.removeRoom(io_r, (err, r) => {
+                    if(err){
+                        this.logError(err);
+                        return cb ? cb() : null;
+                    }
+                    other_client.socket.emit(emits.COMPANON_EXIT);
+                    return cb ? cb() : null;
+                });
+            });
+        });
+    }
+
+    closeRoom(client, data, cb){
+        this._cache.RoomsContainer.findRoomById(data.room_id, (err, io_r) => {
+            if(err){
+                this.logError(err);
+                return cb ? cb() : null;
+            }
+            this._db.RoomsRepository.removeRoomById(data.room_id, (err, room) => {
+                if(err){
+                    this.logError(err);
+                    return cb ? cb() : null;
+                }
+                this._cache.RoomsContainer.removeRoom(io_r, (err, r) => {
+                    if(err){
+                        this.logError(err);
+                        return cb ? cb() : null;
+                    }
+                    let other_client = io_r.clients[0].socket.id == client.socket.id ?
+                                            io_r.clients[1] : io_r.clients[0];
+                    client.socket.emit(emits.NO_ROOM);
+                    other_client.socket.emit(emits.COMPANON_CLOSE_ROOM);
+                    return cb ? cb() : null;
+                });
+            });
+        });
     }
 
     redyToPlay(client, data, cb){
