@@ -1,3 +1,7 @@
 module.exports = {
-    PLAY: 'play'
+    PLAY: 'play',
+    DISCONNECT: 'disconnect',
+    REGISTER: 'register',
+    ROOM: 'room',
+    START: 'start'
 };
