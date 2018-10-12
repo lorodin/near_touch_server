@@ -16,7 +16,8 @@ const EMITS = {
     ERROR: 'error',
     INFO: 'info',
     INPUT_PHONE_CONFIRM_CODE: 'confirm_code',
-    USER_BUSY: 'user_busy'
+    USER_BUSY: 'user_busy',
+    CONNECTION: 'connection'
 }
 
 module.exports = EMITS;

@@ -5,5 +5,9 @@
     },
     "log_level": "debug",
     "code_live": 5400,
-    "phone_confirm_length": 5
+    "phone_confirm_length": 5,
+    "get_state_interval": 20, 
+    "intervals": [{"length": 2,  "points": 10},
+                  {"length": 5,  "points": 5},
+                  {"length": 10, "points": 1}]
 }

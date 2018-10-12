@@ -12,8 +12,10 @@ class StartController{
     }
     
     setAction(action, cb){
-        if(action.cmd == cmds.START)
-            this.start(action.client_id, action.data, cb);
+        setTimeout(() => {
+            if(action.cmd == cmds.START)
+                this.start(action.client_id, action.data, cb);
+        }, 0);
     }
 
     // Методы вызывается, когда клиент открывает приложение
@@ -53,6 +55,7 @@ class StartController{
                 this.logError(err);
                 return cb ? cb() : null;
             }
+
             if(user == null){
                 this.logError(error_messages.USER_NOT_FOUND);
                 socket.emit(emits.USER_UNREGISTRATE);
@@ -68,8 +71,7 @@ class StartController{
                     this.logError(error_messages.CLIETN_NOT_CREATED);
                     return cb ? cb() : null;
                 } 
-
-                if(!user.phone_confirm){
+                if(!user.phone_confirm || user.phone_confirm == 'false'){
                     this.DataBaseService.CodesRepository.findCodeByUserId(user_id, (err, code) => {
                         if(err){
                             this.logError(err);
@@ -83,8 +85,7 @@ class StartController{
                         let old_date = code.date_created.getTime() + 1000 * this.Configs.code_live;
 
                         let now = new Date();
-
-                        if(old_date <= now.getTime()){
+                        if(old_date >= now.getTime()){
                             socket.emit(emits.PHONE_UNCONFIRMED);
                             return cb ? cb() : null;
                         }else{
@@ -112,7 +113,7 @@ class StartController{
                             return cb ? cb() : null;
                         } 
                         if(!room.confirm && room.to == user.id){
-                            socket.emit(emits.HASE_SENTENCE);
+                            socket.emit(emits.HAS_SENTENCE);
                             return cb ? cb() : null;
                         } 
 

@@ -19,7 +19,7 @@ class FakeIO{
 
         for(let i = 0; i < this._listeners['connection'].length; i++)
             this._listeners['connection'][i](socket);
-
+            
         socket.emit('connection');
     }
 

@@ -22,9 +22,10 @@ class FakeSocket{
     }
 
     makeCmd(cmd, data){
-        if(!this.listeners[cmd])
-            throw new Error("Listener not found!");
-        
+        if(!this.listeners[cmd]){
+            console.log(this.listeners);
+            throw new Error("Listener not found! [" + cmd + "]");
+        }
         this.commands_history.push({cmd: cmd, data: data});
 
         for(let i = 0; i < this.listeners[cmd].length; i++)
@@ -33,8 +34,7 @@ class FakeSocket{
 
     emit(cmd, data, cb){
         let model = {cmd: cmd, data: data};
-        this.emit_history.push(model);
-        
+        this.emit_history.push(model);   
         if(this.emit_listeners[cmd])
             for(let i = 0; i < this.emit_listeners[cmd].length; i++)
                 this.emit_listeners[cmd][i](data);

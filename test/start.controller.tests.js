@@ -35,7 +35,7 @@ describe('Start controller', () => {
     let s_container = new SocketsContainer();
     let cach_service = new CacheService(c_container, r_container, s_container);
 
-    let configs = {code_live: 0};
+    let configs = {code_live: 100};
 
     let logger = new FakeLogger();
 
@@ -183,7 +183,7 @@ describe('Start controller', () => {
                                      {user_id: user_3.id,
                                       phone: user_3.phone});
         
-        controller.Configs = {code_live: 15};
+        controller.Configs = {code_live: 0};
         
         controller.setAction(action, () => {
             let emit = socket_3.emit_history.pop();
@@ -210,7 +210,7 @@ describe('Start controller', () => {
         controller.setAction(action, () => {
             let emit = socket_2.emit_history.pop();
             assert(logger.history.length == 0);
-            assert(emit.cmd == emits.HASE_SENTENCE);
+            assert(emit.cmd == emits.HAS_SENTENCE);
             done();
         });
     });
