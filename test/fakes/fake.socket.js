@@ -23,7 +23,6 @@ class FakeSocket{
 
     makeCmd(cmd, data){
         if(!this.listeners[cmd]){
-            console.log(this.listeners);
             throw new Error("Listener not found! [" + cmd + "]");
         }
         this.commands_history.push({cmd: cmd, data: data});

@@ -8,7 +8,7 @@ const CMDS = {
     TOUCH_DOWN: 'touch_down',
     TOUCH_UP: 'touch_up',
     MOVE: 'move',
-    EXIT_ROOM: 'exit_room',
+    PAUSE: 'pause',
     CLOSE_ROOM: 'close_room',
     DISCONNECT: 'disconnec',
     GET_CODE: 'get_code',

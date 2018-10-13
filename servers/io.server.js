@@ -27,7 +27,7 @@ class IOServer{
                 });
                 socket.on(routings.ROOM, (data) => {
                     let action = new ActionModel(socket.id, data.cmd, data.data);
-                    this.controllers.RoomsController.setAction(action);
+                    this.controllers.RoomController.setAction(action);
                 });
                 socket.on(routings.PLAY, (data) => {
                     let action = new ActionModel(socket.id, data.cmd, data.data);

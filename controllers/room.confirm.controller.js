@@ -240,7 +240,7 @@ class RoomConfirmController{
                                     return cb ? cb() : null;
                                 }
                                 socket.emit(emits.YOUR_SENTENCE_NOT_CONFIRM, {to_phone: confirm_user.phone, room_id: room.id});
-    
+                                
                                 if(client) client.socket.emit(emits.HAS_SENTENCE, {from_phone: user.phone, room_id: room.id});
                                 
                                 return cb ? cb() : null;

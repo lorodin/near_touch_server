@@ -10,7 +10,7 @@ const EMITS = {
     COMPANON_TOUCH_DOWN: 'c_touch_down',
     COMPANON_TOUCH_UP: 'c_touch_up',
     COMPANON_MOVE: 'c_move',
-    COMPANON_EXIT: 'c_exit',
+    COMPANON_PAUSE: 'c_pause',
     COMPANON_CLOSE_ROOM: 'c_close_room',
     UNREGISTRATE: 'unregistrate',
     ERROR: 'error',
