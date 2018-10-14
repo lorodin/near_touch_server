@@ -61,11 +61,14 @@ class PlayController{
 
             let other_client = io_r.clients[0].socket.id == client.socket.id ? 
                                     io_r.clients[1] : io_r.clients[0];
-            other_client.socket.emit(emits.COMPANON_PAUSE);
-
-            client.last_action = undefined;
+     
+            client.last_action = cmds.PAUSE;
 
             io_r.state = room_states.PAUSE;
+
+            other_client.socket.emit(emits.COMPANON_PAUSE);
+
+            if(other_client.last_action != cmds.PAUSE) other_client.last_action = cmds.CLIENT_REDY_TO_PLAY;
 
             return cb ? cb() : null;
         });
@@ -110,7 +113,7 @@ class PlayController{
             }
 
             let other_client = room.clients[0].socket.id == client.socket.id ? room.clients[1] : room.clients[0];
-            
+    
             if(!other_client.last_action) return cb ? cb() : null;
             
             room.clients[0].last_action = undefined;
@@ -166,8 +169,6 @@ class PlayController{
                         room.total_points -= this._configs.intervals[this._configs.intervals.length - 1].points;
                     else
                        room.total_points = 0;
-
-                    console.log('Total room points: ' + room.total_points);
                 } 
                 let data1 = {'room_id': room.room.id, 
                              'x': x2, 
@@ -185,15 +186,12 @@ class PlayController{
             }else if(client.last_action.cmd == cmds.TOUCH_DOWN){
                 let x = client.last_action.data.x;
                 let y = client.last_action.data.y;
-                console.log('Client ' + client.socket.id + ' TOUCH DOWN');
-                console.log(x + ' ' + y);
                 if(room.total_points >= this._configs.intervals[this._configs.intervals.length - 1].points)
                     room.total_points -= this._configs.intervals[this._configs.intervals.length - 1].points;
                 else
                     room.total_points = 0;
 
-                console.log('Total room points: ' + room.total_points);
-
+                
                 let data_1 = {'room_id': room.room.id, 
                               'x': x, 
                               'y': y, 
@@ -210,8 +208,7 @@ class PlayController{
             }else if(other_client.last_action.cmd == cmds.TOUCH_DOWN){
                 let x = other_client.last_action.data.x;
                 let y = other_client.last_action.data.y;
-                console.log('Client ' + other_client.socket.id + ' TOUCH DOWN');
-                console.log(x + ' ' + y);
+                
                 if(room.total_points >= this._configs.intervals[this._configs.intervals.length - 1].points)
                     room.total_points -= this._configs.intervals[this._configs.intervals.length - 1].points;
                 else

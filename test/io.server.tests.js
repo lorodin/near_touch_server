@@ -5,6 +5,7 @@ const emits = require('../enums/emits.enum');
 const cmds = require('../enums/cmd.enum');
 const error_messages = require('../enums/error.messages');
 const routings = require('../enums/routings.enum');
+const room_states = require('../enums/room.states.enum');
 
 const FakeDB = require('./fakes/fake.database');
 const FakeCodesRepository = require('./fakes/fake.codes.repository');
@@ -271,6 +272,21 @@ describe('IOServer', () => {
     });
     
     describe('Register actions', () => {
+        it('Error model', (done) => {
+            let f_socket = new FakeSocket(1);
+
+            f_socket.onClientEmit(emits.ERROR, (data) => {
+                assert(data.msg == error_messages.ERROR_MODEL);
+                done();
+            });
+
+            f_socket.onClientEmit(emits.CONNECTION, () => {
+                f_socket.makeCmd(routings.REGISTER, {cmd: cmds.REGISTER, 
+                    data: {name:  '', phone: ''}});
+            });
+            io.connection(f_socket);
+        });
+
         it('Registrate user', (done) => {
             let f_socket = new FakeSocket(1);
 
@@ -474,6 +490,358 @@ describe('IOServer', () => {
                 });
             });
         });
+        it('Room created and cancel created user', (done) => {
+            user_1.phone_confirm = true;
+            user_2.phone_confirm = true;
+
+            u_repository.saveUser(user_1, (err, u1) => {
+                assert(!err);
+                u_repository.saveUser(user_2, (err, u2) => {
+                    let f_socket1 = new FakeSocket(1);
+                    let f_socket2 = new FakeSocket(2);
+        
+                    let count_no_room_1 = 0;
+                    let count_no_room_2 = 0;
+        
+                    let companon_has_sentence = false;
+
+                    f_socket1.onClientEmit(emits.YOUR_SENTENCE_NOT_CONFIRM, (data) => {
+                        let find_room = db.rooms.find(r => r.id == data.room_id);
+                        assert(data.to_phone == u2.phone);
+                        assert(find_room);
+                        f_socket1.makeCmd(routings.ROOM, {
+                            cmd: cmds.CANCEL_ROOM,
+                            data: {
+                                room_id: data.room_id,
+                                user_id: u1.id
+                            }
+                        });
+                    });
+
+                    f_socket2.onClientEmit(emits.HAS_SENTENCE, (data) => {
+                        assert(db.rooms.length == 1);
+                        let room = db.rooms[0];
+                        assert(room.id = data.room_id);
+                        assert(data.from_phone == u1.phone);
+                        companon_has_sentence = true;
+                    });
+
+                    f_socket1.onClientEmit(emits.NO_ROOM, () => {
+                        if(count_no_room_1 == 0){
+                            count_no_room_1++;
+                            f_socket1.makeCmd(routings.ROOM, {
+                                cmd: cmds.CREATE_ROOM,
+                                data: {
+                                    from: u1.id,
+                                    to_phone: u2.phone
+                                }
+                            });
+                        }else{
+                            assert(db.rooms.length == 0);
+                            assert(r_container.count() == 0);
+                            count_no_room_1 = 2;
+                            if(count_no_room_2 == 2){
+                                assert(companon_has_sentence);
+                                done();
+                            } 
+                        }
+                    });
+
+                    f_socket2.onClientEmit(emits.NO_ROOM, () => {
+                        if(count_no_room_2 == 0) count_no_room_2 = 1;
+                        else{
+                            assert(db.rooms.length == 0);
+                            assert(r_container.count() == 0);
+                            count_no_room_2 = 2;
+                            if(count_no_room_1 == 2) {
+                                assert(companon_has_sentence);
+                                done();
+                            }
+                        }
+                    });
+
+                    f_socket1.onClientEmit(emits.CONNECTION, () => {
+                        assert(logger.history.length == 0);
+                        f_socket1.makeCmd(routings.START, {user_id: u1.id, phone: u1.phone});
+                    });
+
+                    f_socket2.onClientEmit(emits.CONNECTION, () => {
+                        assert(logger.history.length == 0);
+                        f_socket2.makeCmd(routings.START, {user_id: u2.id, phone: u2.phone});
+                    });
+
+                    io.connection(f_socket1);
+                    io.connection(f_socket2);
+                });
+            });
+        })
     });
     
+    describe('Play/pause/resume/exit room', () => {
+        it('Start with exist room', (done) => {
+            user_1.phone_confirm = true;
+            user_2.phone_confirm = true;
+            register_two_users(user_1, user_2, (u1, u2) => {
+                let room = {
+                    from: u1.id,
+                    to: u2.id,
+                    confirm: true
+                };
+                r_repository.saveRoom(room, (err, r) => {
+                    assert(!err);
+                    room = r;
+
+                    let s1 = new FakeSocket(1);
+                    let s2 = new FakeSocket(2);
+
+                    let count_get_state_1 = 0;
+                    let count_get_state_2 = 0;
+                    let pause_fix = false;
+                    
+                    s2.onClientEmit(emits.COMPANON_PAUSE, () => {
+                        pause_fix = true;
+                        r_container.findRoomById(room.id, (err, r) => {
+                            assert(!err);
+                            assert(r.state == room_states.PAUSE);
+                            s1.makeCmd(routings.PLAY, {
+                                cmd: cmds.CLIENT_REDY_TO_PLAY,
+                                data: {
+                                    room_id: room.id
+                                }
+                            })
+                        })
+                    });
+
+                    s1.onClientEmit(emits.GET_STATE, () => {
+                        count_get_state_1++;
+                        if(count_get_state_1 == 1){
+                            s1.makeCmd(routings.PLAY, {
+                                cmd: cmds.PAUSE,
+                                data: {
+                                    room_id: room.id
+                                }
+                            });
+                        }else{
+                            assert(pause_fix);
+                            r_container.findRoomById(room.id, (err, r) => {
+                                assert(!err);
+                                assert(r.state == room_states.PLAY);
+                                if(count_get_state_2 >= 2) done();
+                            });
+                        }
+                    });
+
+                    s2.onClientEmit(emits.GET_STATE, () => {
+                        count_get_state_2++;
+                        if(count_get_state_2 >= 2){
+                            assert(pause_fix);
+                            r_container.findRoomById(room.id, (err, r) => {
+                                assert(!err);
+                                assert(r.state == room_states.PLAY);
+                                if(count_get_state_1 >= 2) done();
+                            })
+                        }
+                    }); 
+
+                    s1.onClientEmit(emits.HAS_ROOM_1, (data) => {
+                        assert(room.id == data.room_id);
+                        s1.makeCmd(routings.PLAY, {
+                            cmd: cmds.CLIENT_REDY_TO_PLAY,
+                            data: {
+                                room_id: room.id
+                            }
+                        })
+                    });
+
+                    s2.onClientEmit(emits.HAS_ROOM_1, (data) => {
+                        assert(room.id == data.room_id);
+                        s2.makeCmd(routings.PLAY, {
+                            cmd: cmds.CLIENT_REDY_TO_PLAY,
+                            data: {
+                                room_id: room.id
+                            }
+                        });
+                    });
+
+                    s1.onClientEmit(emits.CONNECTION, () => {
+                        s1.makeCmd(routings.START, {
+                            user_id: u1.id,
+                            phone: u1.phone
+                        });
+                    });
+
+                    s2.onClientEmit(emits.CONNECTION, () => {
+                        s2.makeCmd(routings.START, {
+                            user_id: u2.id,
+                            phone: u2.phone
+                        });
+                    });
+
+                    io.connection(s1);
+                    io.connection(s2);
+                })
+            });
+        });
+        
+        it('Pause together and resume', (done) => {
+            user_1.phone_confirm = true;
+            user_2.phone_confirm = true;
+            register_two_users(user_1, user_2, (u1, u2) => {
+                let s1 = new FakeSocket(1);
+                let s2 = new FakeSocket(2);
+
+                let room = {
+                    from: u1.id,
+                    to: u2.id,
+                    confirm: true
+                };
+
+                r_repository.saveRoom(room, (err, r) => {
+                    assert(!err);
+                    room = r;
+
+                    let count_get_state_1 = 0;
+                    let count_get_state_2 = 0;
+
+                    let count_pause = 0;
+
+                    s1.onClientEmit(emits.COMPANON_PAUSE, (data) => {
+                        count_pause++;
+                        r_container.findRoomById(room.id, (err, r) => {
+                            assert(!err);
+                            assert(r.state == room_states.PAUSE);
+                            s2.makeCmd(routings.PLAY, {
+                                cmd: cmds.CLIENT_REDY_TO_PLAY,
+                                data: {
+                                    user_id: u2.id,
+                                    room_id: room.id
+                                }
+                            });
+                        })
+                    });
+
+                    s2.onClientEmit(emits.COMPANON_PAUSE, (data) => {
+                        count_pause++;
+                        r_container.findRoomById(room.id, (err, r) => {
+                            assert(!err);
+                            assert(r.state == room_states.PAUSE);
+                            s1.makeCmd(routings.PLAY, {
+                                cmds: cmds.CLIENT_REDY_TO_PLAY,
+                                data: {
+                                    user_id: u1.id,
+                                    room_id: room.id
+                                }
+                            })
+                        })
+                    });
+
+                    s1.onClientEmit(emits.GET_STATE, () => {
+                        count_get_state_1++;
+                        if(count_get_state_1 == 1){
+                            setTimeout(() => {
+                                s1.makeCmd(routings.PLAY, {
+                                    cmd: cmds.PAUSE,
+                                    data:{
+                                        user_id: u1.id,
+                                        room_id: room.id
+                                    }
+                                });
+                            }, 0);
+                        }else{
+                            r_container.findRoomById(room.id, (err, r) => {
+                                assert(!err);
+                                assert(r.state == room_states.PLAY);
+                                if(count_get_state_2 >= 2){
+                                    assert(count_pause == 2, 'Count pause not 2: ' + count_pause);
+                                    done();
+                                } 
+                            });
+                        }
+                    });
+
+                    s2.onClientEmit(emits.GET_STATE, () => {
+                        count_get_state_2++;
+                        if(count_get_state_2 == 1){
+                            setTimeout(() => {
+                                s2.makeCmd(routings.PLAY, {
+                                    cmd: cmds.PAUSE,
+                                    data: {
+                                        room_id: room.id,
+                                        user_id: u2.id
+                                    }
+                                });
+                            }, 0);
+                        }else{
+                            r_container.findRoomById(room.id, (err, r) => {
+                                assert(!err);
+                                assert(r.state == room_states.PLAY);
+                                if(count_get_state_1 >= 2){
+                                    assert(count_pause == 2, 'Count pause not 2: ' + count_pause);
+                                    done();
+                                } 
+                            })
+                        }
+                    })
+
+                    s1.onClientEmit(emits.HAS_ROOM_1, (data) => {
+                        assert(data.room_id == room.id);
+                        s1.makeCmd(routings.PLAY, {
+                            cmd: cmds.CLIENT_REDY_TO_PLAY,
+                            data: {
+                                user_id: u1.id,
+                                room_id: data.room_id
+                            }
+                        });
+                    });
+
+                    s2.onClientEmit(emits.HAS_ROOM_1, (data) => {
+                        assert(data.room_id == room.id);
+                        s2.makeCmd(routings.PLAY, {
+                            cmd: cmds.CLIENT_REDY_TO_PLAY,
+                            data:{
+                                user_id: u1.id,
+                                room_id: data.room_id
+                            }
+                        })
+                    })
+
+                    s1.onClientEmit(emits.CONNECTION, () => {
+                        s1.makeCmd(routings.START, {
+                            user_id: u1.id,
+                            phone: u1.phone
+                        });
+                    });
+
+                    s2.onClientEmit(emits.CONNECTION, () => {
+                        s2.makeCmd(routings.START, {
+                            user_id: u2.id,
+                            phone: u2.phone
+                        });
+                    });
+
+                    io.connection(s1);
+                    io.connection(s2);
+                })
+            });
+        });
+
+        // it('Close room', (done) => {
+
+        // });
+
+        // it('Something play', (done) => {
+
+        // });
+    });
+
+    let register_two_users = (u1, u2, cb) => {
+        u_repository.saveUser(u1, (err, u_1) => {
+            assert(!err);
+            u_repository.saveUser(u2, (err, u_2) => {
+                assert(!err);
+                cb(u_1, u_2);
+            })
+        })
+    }
 });
+

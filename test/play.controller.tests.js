@@ -233,8 +233,6 @@ describe('Play controller', () => {
         });
 
         socket_1.onClientEmit(emits.COMPANON_TOUCH_DOWN, (data) => {
-            console.log('Data socket 1');
-            console.log(data);
             assert(data.x == client_2_cmds[server_step].x);
             assert(data.y == client_2_cmds[server_step].y);
             assert(server_step == 0 || server_step == 2 || server_step == 4 || server_step == 5);
@@ -249,8 +247,6 @@ describe('Play controller', () => {
         });
 
         socket_2.onClientEmit(emits.COMPANON_TOUCH_DOWN, (data) => {
-            console.log('Data socket 2');
-            console.log(data);
             assert(data.x == client_1_cmds[server_step].x);
             assert(data.y == client_1_cmds[server_step].y);
             assert(server_step == 0 || server_step == 1 || server_step == 3 || server_step == 4 || server_step == 5);

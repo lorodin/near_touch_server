@@ -61,7 +61,7 @@ class StartController{
                 socket.emit(emits.USER_UNREGISTRATE);
                 return cb ? cb() : null;
             }
-            
+
             this.CahceService.ClientsContainer.addClient(socket, user, (err, io_client_1) => {
                 if(err){
                     this.logError(err);
@@ -71,6 +71,7 @@ class StartController{
                     this.logError(error_messages.CLIETN_NOT_CREATED);
                     return cb ? cb() : null;
                 } 
+                
                 if(!user.phone_confirm || user.phone_confirm == 'false'){
                     this.DataBaseService.CodesRepository.findCodeByUserId(user_id, (err, code) => {
                         if(err){
