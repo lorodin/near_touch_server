@@ -127,7 +127,6 @@ class PlayController{
 
     clientAction(client, action, cb){
         client.last_action = action;
-
         this._cache.RoomsContainer.findRoomById(action.data.room_id, (err, room) => {
             if(err){
                 this.logError(err);

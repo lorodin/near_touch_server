@@ -49,9 +49,6 @@ class DisconnectController{
                     });
                 });
             }else{
-                // console.log('IO ROOM');
-                // console.log(io_room);
-
                 this._db.RoomsRepository.saveRoom(io_room.room, (err, room) => {
                     if(err){
                         this.logError(err);
@@ -76,9 +73,9 @@ class DisconnectController{
                 
                                 let a_socket = io_room.clients[0].socket.id == client.socket.id ? 
                                                         io_room.clients[1].socket : 
-                                                        io_room.clients[2].socket;
+                                                        io_room.clients[0].socket;
         
-                                a_socket.emit(emits.HAS_ROOM_0);
+                                a_socket.emit(emits.HAS_ROOM_0, {room_id: io_room.room.id});
         
                                 return cb ? cb() : null;
                             });
