@@ -10,9 +10,11 @@ class RegisterController{
         this._logger = logger;
         this._configs = configs;
         this._sms = sms_service;
+        this.TAG = 'RegisterController';
     }
 
     setAction(action, cb){
+        this._logger.info(this.TAG, action);
         this._cache.SocketsService.get(action.client_id, (err, socket) => {
             if(err){
                 this.logError(err);

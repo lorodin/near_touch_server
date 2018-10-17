@@ -4,12 +4,14 @@ const error_messages = require('../enums/error.messages');
 
 class DisconnectController{
     constructor(cacheService, dataBaseService, logger){
+        this.TAG = 'DisconnectController';
         this._cache = cacheService;
         this._db = dataBaseService;
         this._logger = logger;
     }
 
     setAction(action, cb){
+        this._logger.info(this.TAG, action);
         this._cache.ClientsContainer.findClientBySocketId(action.client_id, (err, client)=>{
             if(err) {
                 this.logError(err);
@@ -17,13 +19,15 @@ class DisconnectController{
             }
             
             if(!client) {
-                this.logError(error_messages.CLIENT_NOT_FOUND);
-                return cb ? cb() : null;
+                this._cache.SocketsService.remove(action.client_id, 
+                    () => {
+                        return cb ? cb() : null;
+                    });
+            }else{
+                setTimeout(()=>{
+                    this.disconnect(client, cb);
+                }, 0);
             }
-
-            setTimeout(()=>{
-                this.disconnect(client, cb);
-            }, 0);
         });
     }
 
