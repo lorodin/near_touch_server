@@ -17,7 +17,6 @@ class IOServer{
     start(){
         this.logger.debug(this.TAG, 'Server started');
         this.io.on('connection', (s) => {
-            this.logger.log('IOServer', 'client connection: ' + s.id);
             this.cache.SocketsService.push(s, (err, socket) => {
                 if(err) return this.logError(err);
                 socket.on(routings.START, (data) => {

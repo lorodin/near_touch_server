@@ -506,7 +506,7 @@ describe('Room Confirm Controller', () => {
                 to_phone: user_3.phone
             });
             controller.setAction(action, () => {
-                let log = logger.history.pop();
+                let log = logger.history_info.pop();
                 let emit = socket_1.emit_history.pop();
                 
                 assert(log != null);

@@ -204,9 +204,7 @@ describe('Disconnect controller', () => {
     it('Error, client not found', (done) => {
         let action = new ActionModel(3333, cmds.DISCONNECT, null);
         controller.setAction(action, () => {
-            let log = logger.history.pop();
-            assert(log.type == 'error');
-            assert(log.msg == error_messages.CLIENT_NOT_FOUND);
+            assert(logger.history.length == 0);
             done();
         });
     });
