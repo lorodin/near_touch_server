@@ -9,15 +9,12 @@ class IOServer{
         this.logger = logger;
         this.configs = configs;
         this.cache = cache;
-        this.TAG = 'IOServer';
     }
     logError(err){
         if(this.logger) this.logger(err);
     }
     start(){
-        this.logger.debug(this.TAG, 'Server started');
         this.io.on('connection', (s) => {
-            this.logger.log('IOServer', 'client connection: ' + s.id);
             this.cache.SocketsService.push(s, (err, socket) => {
                 if(err) return this.logError(err);
                 socket.on(routings.START, (data) => {

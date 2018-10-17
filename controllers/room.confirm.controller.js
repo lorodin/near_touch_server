@@ -9,11 +9,9 @@ class RoomConfirmController{
         this._cache = cache_service;
         this._db = db_service;
         this._logger = logger;
-        this.TAG = 'RoomConfirmController';
     }
 
     setAction(action, cb){
-        this._logger.info(this.TAG, action);
         this._cache.SocketsService.get(action.client_id, (err, socket) => {
             if(err){
                 this.setError(err);

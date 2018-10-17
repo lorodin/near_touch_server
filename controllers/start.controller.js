@@ -9,11 +9,9 @@ class StartController{
         this.DataBaseService = database_service;
         this.Logger = logger;
         this.Configs = configs;
-        this.TAG = 'StartController';
     }
     
     setAction(action, cb){
-        this.Logger.info(this.TAG, action);
         setTimeout(() => {
             if(action.cmd == cmds.START)
                 this.start(action.client_id, action.data, cb);

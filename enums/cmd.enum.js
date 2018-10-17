@@ -10,7 +10,7 @@ const CMDS = {
     MOVE: 'move',
     PAUSE: 'pause',
     CLOSE_ROOM: 'close_room',
-    DISCONNECT: 'disconnect',
+    DISCONNECT: 'disconnec',
     GET_CODE: 'get_code',
     CLIENT_REDY_TO_PLAY: 'client_redy_to_play'
 }
