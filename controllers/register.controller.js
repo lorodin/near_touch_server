@@ -45,7 +45,7 @@ class RegisterController{
     }
 
     makeCode(socket, data, cb){
-        if(!data.user_id || data.user_id.trim() == ''){
+        if(!data || !data.user_id || data.user_id.trim() == ''){
             socket.emit(emits.ERROR, {msg: error_messages.ERROR_MODEL});
             return cb ? cb() : null;
         }

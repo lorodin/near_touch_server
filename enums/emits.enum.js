@@ -13,7 +13,7 @@ const EMITS = {
     COMPANON_PAUSE: 'c_pause',
     COMPANON_CLOSE_ROOM: 'c_close_room',
     UNREGISTRATE: 'unregistrate',
-    ERROR: 'error',
+    ERROR: 'c_error',
     INFO: 'info',
     INPUT_PHONE_CONFIRM_CODE: 'confirm_code',
     USER_BUSY: 'user_busy',
