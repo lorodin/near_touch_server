@@ -1,7 +1,7 @@
 module.exports = {
     equelsPoints: (p1, p2, sigma) => {
         if(!sigma) sigma = Number.MIN_VALUE * 10;
-        return (Math.abs(p1.x - p2.x) <= sigma && Math.abs(p1.y - p2.y) <= sigma);
+        return p1 && p2 && (Math.abs(p1.x - p2.x) <= sigma && Math.abs(p1.y - p2.y) <= sigma);
     },
     calcXYSpeed: (s_p, e_p, speed) => {
         let dx = e_p.x - s_p.x;

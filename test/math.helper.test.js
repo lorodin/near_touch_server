@@ -22,6 +22,13 @@ describe('MathHelper', () => {
             );
             assert(!r2);
         });
+        it('Not equels before on point is undefined', () => {
+            let p = {x: 0, y: 0};
+            let r1 = MathHelper.equelsPoints(p, null);
+            let r2 = MathHelper.equelsPoints(undefined, p);
+            assert(!r1);
+            assert(!r2);
+        })
     });
     describe('Calc XY Speed', () => {
         it('Calc for speed = 2.5 y.e. p1(1, 1) p2(4, 5)', () => {

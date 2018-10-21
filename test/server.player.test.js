@@ -1,4 +1,4 @@
-const ServerPlayer = require('../helpers/server.player');
+const ServerPlayer = require('../game/server.player');
 const MathHelper = require('../helpers/math.helper');
 const assert = require('assert');
 const FakePointsGenerator = require('./fakes/fake.random.points.generator');
@@ -25,12 +25,7 @@ describe('ServerPlayer', () => {
         player = new ServerPlayer(100, 100, {x: 50, y: 50}, 2, generator);
     });
 
-    it('Player enabled false', () => {
-        player.update(1, (err, data) => {
-            assert(!err);
-            assert(!data);
-        });
-    });
+    
     describe('Server plaing', () => {
         it('Playing', (done)=>{
             let index = 0;
@@ -39,7 +34,6 @@ describe('ServerPlayer', () => {
 
             generator.onPointsGetting((point) => {
                 assert(MathHelper.equelsPoints(point, points[index++]));
-                console.log('------------------------------------');
             });
 
             let update = () => {
@@ -50,7 +44,6 @@ describe('ServerPlayer', () => {
                     if(index >= points.length){
                         done();
                     }else{
-                        console.log(point);
                         update();
                     }  
                 });

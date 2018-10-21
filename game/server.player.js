@@ -1,10 +1,9 @@
-let MathHelper = require('./math.helper');
+let MathHelper = require('../helpers/math.helper');
 
 class ServerPlayer{
     constructor(width, height, sPoint, sSpeed, pointsGenerator){
         this.width = width;
         this.height = height;
-        this.enabled = false;
         this.sSpeed = sSpeed;
         this.s_x = 0;
         this.s_y = 0;
@@ -14,15 +13,13 @@ class ServerPlayer{
     }
 
     update(dt, cb){
-        if(!this.enabled) return cb(null, null);
-        
         if(MathHelper.equelsPoints(this.s_p, this.e_p)){
             this.e_p = this.p_generator.getNextPoint();
             let l = MathHelper.length(this.s_p, this.e_p);
             let dx = this.e_p.x - this.s_p.x;
             let dy = this.e_p.y - this.s_p.y;
-            this.s_x = this.sSpeed * dx / l;
-            this.s_y = this.sSpeed * dy / l;
+            this.s_x = l == 0 ? 0 : this.sSpeed * dx / l;
+            this.s_y = l == 0 ? 0 : this.sSpeed * dy / l;  
         }
 
         let scale_speed_x = dt * this.s_x;
@@ -42,6 +39,7 @@ class ServerPlayer{
                 this.s_p.y = this.e_p.y;
                 y_edit = true;
             }
+        
         if(!x_edit) this.s_p.x += scale_speed_x;
         if(!y_edit) this.s_p.y += scale_speed_y;
         
