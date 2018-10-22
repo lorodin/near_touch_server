@@ -76,6 +76,100 @@ describe('Help level', () => {
         update();
     })
 
+
+    // Тестирование калькуляции очков при неверном касание
+    it('Incorrect game', (done) => {
+        let index = 0;
+        let start_incorrect = false;
+        let p1 = level.s_player.s_p;
+        let p2 = level.s_player.s_p;
+
+        let update = () => {
+            let old_total = level.total_points;
+            level.update(1, {name: '1', action: cmds.TOUCH_DOWN, point: p1},
+                            {name: '2', action: cmds.TOUCH_DOWN, point: p2}, (err, go, point) => {
+                assert(!err);
+                if(index++ < 2) return update();
+                
+                if(!start_incorrect){
+                    assert(go.total_points == old_total + bonus);
+                    start_incorrect = go.total_points >= max_points / 2;
+                }else{
+                    old_total = old_total - fine < 0 ? 0 : old_total - fine;
+                    assert(go.total_points == old_total, 'Total: ' + go.total_points + '; old_total: ' + old_total + '; fine: ' + fine);
+                }
+
+                if(start_incorrect){
+                    p1 = {x: point.x - 10, y: point.y - 10};
+                    p2 = {x: point.x + 10, y: point.y + 10};
+                }else{
+                    p1 = point;
+                    p2 = point;
+                }
+
+                if(go.total_points == 0) return done();
+                else return update();
+            });
+        }
+
+        update();
+    });
+
+    // Тестирование калькуляции очков при отпускании тача
+    it('Touch up', (done) => {
+        let p1 = {name: '1', action: cmds.TOUCH_DOWN, point: {x: 0, y: 0}};
+        let p2 = {name: '2', action: cmds.TOUCH_DOWN, point: {x: 0, y: 0}};
+        let index = 0;
+        let update = () => {
+            let old_total = level.total_points;
+
+            level.update(1, p1, p2, (err, go, point) => {
+                if(index++ < 2){
+                    p1.point = point;
+                    p2.point = point;
+                    return update();
+                } 
+                if(index == 3){
+                    assert(old_total + bonus == level.total_points);
+                    assert(go.near.length == 3);
+                    assert(go.other.length == 0);
+                    p1.point = {x: 1, y: 1};
+                    p2.point = {x: 1, y: 1};
+                    return update();
+                }else if(index == 4){
+                    assert(go.near.length == 1);
+                    assert(go.other.length == 2);
+                    assert(old_total == level.total_points, 'Old total: ' + old_total + '; new_total: ' + level.total_points);
+                    p1.action = cmds.TOUCH_UP;
+                    p2.point = point;
+                    return update();
+                }else if(index == 5){
+                    assert(go.near.length == 2);
+                    assert(go.other.length == 0);
+                    assert(go.hides.length == 1);
+                    assert(go.hides[0] == '1');
+                    assert(old_total - fine == level.total_points);
+                    p1.action = cmds.TOUCH_DOWN;
+                    p1.point = point;
+                    p2.action = cmds.TOUCH_UP;
+                    return update();
+                }else if(index == 6) {
+                    assert(go.near.length == 2);
+                    assert(go.other.length == 0);
+                    assert(go.hides.length == 1);
+                    assert(go.hides[0] == '2');
+                    assert(go.shows.length == 1);
+                    assert(go.shows[0] == '1');
+                    old_total = old_total - fine < 0 ? 0 : old_total - fine;
+                    assert(old_total == level.total_points);
+                    return done();
+                }
+            });
+        };
+
+        update();
+    })
+
     it('Correctly game', (done) => {
 
         generator.onPointsGetting((point)=>{

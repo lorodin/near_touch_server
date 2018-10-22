@@ -73,7 +73,7 @@ class HelpLevel{
             }
         }
         else{
-            this.total_points -= this.fine;
+            if(!MathHelper.equelsPoints(pp1, pp2)) this.total_points -= this.fine;
         }
         
         if(this.total_points < 0) this.total_points = 0;
