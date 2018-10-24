@@ -142,8 +142,8 @@ class RoomConfirmController{
                                 socket.emit(emits.HAS_ROOM_0, {room_id: room.id});
                                 return cb ? cb() : null;
                             }    
-
-                            let io_room = new IORoom([client_1, client_2], room);
+                            
+                            let io_room = this._cache.RoomsContainer.createRoom([client_1, client_2], room);
 
                             this._cache.RoomsContainer.addRoom(io_room, (err, i_r) => {
                                 if(err){

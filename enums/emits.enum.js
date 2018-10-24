@@ -7,6 +7,7 @@ const EMITS = {
     HAS_ROOM_0: 'has_room_0',
     HAS_ROOM_1: 'has_room_1',
     GET_STATE: 'get_state',
+    SET_STATE: 'set_state',
     COMPANON_TOUCH_DOWN: 'c_touch_down',
     COMPANON_TOUCH_UP: 'c_touch_up',
     COMPANON_MOVE: 'c_move',
