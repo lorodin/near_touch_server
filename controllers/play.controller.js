@@ -64,7 +64,7 @@ class PlayController{
      
             client.last_action = cmds.PAUSE;
 
-            io_r.state = room_states.PAUSE;
+            io_r.pause();
 
             other_client.socket.emit(emits.COMPANON_PAUSE);
 
@@ -118,7 +118,7 @@ class PlayController{
             
             room.clients[0].last_action = undefined;
             room.clients[1].last_action = undefined;
-            room.state = room_states.PLAY;
+            room.play();
 
             this.asyncGetState(room.clients[0].socket, cb);
             this.asyncGetState(room.clients[1].socket, cb);

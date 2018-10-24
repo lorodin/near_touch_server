@@ -131,7 +131,7 @@ class StartController{
                                 return cb ? cb() : null;
                             } 
 
-                            let io_room = new IORoom([io_client_1, io_client_2], room);
+                            let io_room = this.CahceService.RoomsContainer.createRoom([io_client_1, io_client_2], room);// new IORoom([io_client_1, io_client_2], room);
 
                             this.CahceService.RoomsContainer.addRoom(io_room, (err, saved_io_room) => {
                                 if(err){

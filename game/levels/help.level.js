@@ -3,7 +3,11 @@ const cmds = require('../../enums/cmd.enum');
 const ServerPlayer = require('../server.player');
 
 class HelpLevel{
-    constructor(max_points, player_names, bonus, fine, inf, w, h, sSpeed, sStart, points_generator){
+    constructor(max_points, player_names, 
+                bonus, fine, 
+                inf, w, h, 
+                sSpeed, sStart, 
+                points_generator){
         this.max_points = max_points;
         this.total_points = 0;
         this.bonus = bonus;
@@ -91,7 +95,8 @@ class HelpLevel{
                 'other': other,
                 'hides': hides,
                 'shows': shows,
-                'total_points': this.total_points
+                'total_points': this.total_points,
+                'level_up': this.total_points == this.max_points
             }, point);
         });
     }

@@ -1,13 +1,19 @@
 const IORoom = require('./IORoom');
 const error_messages = require('../enums/error.messages');
+const PointsGenerator = require('../helpers/random.points.generator');
 
 class IORoomsContainer{
-    constructor(){
+    constructor(configs){
         this.rooms = {};
+        this.configs = configs;
     }
 
     count(){
         return Object.keys(this.rooms).length;
+    }
+
+    createRoom(clients, room){
+        return new IORoom(clients, room, this.configs);
     }
 
     _validateRoom(io_room){

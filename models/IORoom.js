@@ -1,9 +1,5 @@
 const room_states = require('../enums/room.states.enum');
 const TimeWatcher = require('../helpers/time.watcher');
-const ServerPlayer = require('../game/server.player');
-const PointsGenerator = require('../helpers/random.points.generator');
-const MathHelper = require('../helpers/math.helper');
-const cmds = require('../enums/cmd.enum');
 const Game = require('../game/game.core');
 
 class IORoom{
@@ -14,7 +10,8 @@ class IORoom{
         this.state = room_states.PAUSE;
         this.total_points = 0;
         this.timeWatcher = new TimeWatcher();
-        this.game = new Game(generator, configs);
+        if(!this.clients || !this.room) return;
+        this.game = new Game( configs, [clients[0].socket.id, clients[1].socket.id], generator);
     }
 
 
