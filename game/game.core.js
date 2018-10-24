@@ -45,11 +45,12 @@ class Game{
 
     nextLevel(){
         this.level++;
-        if(this.level > this.lvl_points.length) this.level = this.lvl_points.length;
+        let l_index = this.level - 1;
+        if(l_index >= this.lvl_points.length) l_index = this.lvl_points.length - 1;
 
         switch(this.level){
             case 1:
-                return new HelpLevel(this.lvl_points[this.level - 1], 
+                return new HelpLevel(this.lvl_points[l_index], 
                                      this.player_names, 
                                      this.bonus, 
                                      this.fine, 
@@ -60,7 +61,7 @@ class Game{
                                      this.sPoint, 
                                      this.generator);
             default:
-                return new Level2(this.lvl_points[this.level - 1], 
+                return new Level2(this.lvl_points[l_index], 
                                   this.player_names,
                                   this.bonus, 
                                   this.fine, 

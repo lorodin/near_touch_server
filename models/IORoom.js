@@ -14,6 +14,9 @@ class IORoom{
         this.game = new Game( configs, [clients[0].socket.id, clients[1].socket.id], generator);
     }
 
+    getTotalPoints(){
+        return this.game.level;
+    }
 
     play(){
         this.state = room_states.PLAY;
@@ -28,17 +31,17 @@ class IORoom{
 
     update(cb){
         if(this.tate == room_states.PAUSE) return cb(null, null);
-
+        
         let p1 = {
             name: this.clients[0].socket.id,
             action: this.clients[0].last_action.cmd,
-            point: this.clients[0].last_action.data
+            point: this.clients[0].last_action.data.point
         };
 
         let p2 = {
             name: this.clients[1].socket.id,
             action: this.clients[1].last_action.cmd,
-            point: this.clients[1].last_action.data
+            point: this.clients[1].last_action.data.point
         };
 
         this.game.update(this.timeWatcher.fix(), p1, p2, (err, gameObject) => {

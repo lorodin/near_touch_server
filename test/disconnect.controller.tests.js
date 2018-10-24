@@ -143,7 +143,7 @@ describe('Disconnect controller', () => {
 
     it('Disconnect client from active room and update room to db', (done) => {
         let action = new ActionModel(socket_1.id, cmds.DISCONNECT, null);
-        io_room.room.points = 100;
+        io_room.game.level = 100;
         let length_clients = io_c_container.count();
         let length_rooms = io_r_container.count();
         let length_sockets = io_s_container.count();
@@ -156,7 +156,9 @@ describe('Disconnect controller', () => {
             assert(length_rooms - 1 == io_r_container.count());
             assert(length_sockets - 1 == io_s_container.count());
             assert(db.rooms.length == 2, 'DB ROOM NOT 1: ' + db.rooms.length);
+
             assert(db.rooms.find(r => r.id == room_1.id).points == 100);
+
             let find_c = io_c_container.clients[socket_1.id];
             let find_s = io_s_container.sockets.find(s => s.id == socket_1.id);
             assert(!find_c);

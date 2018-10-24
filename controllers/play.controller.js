@@ -116,12 +116,14 @@ class PlayController{
     
             if(!other_client.last_action) return cb ? cb() : null;
             
-            room.clients[0].last_action = undefined;
-            room.clients[1].last_action = undefined;
             room.play();
 
-            this.asyncGetState(room.clients[0].socket, cb);
-            this.asyncGetState(room.clients[1].socket, cb);
+            room.clients[0].last_action = undefined;
+            room.clients[1].last_action = undefined;
+
+            this.asyncGetState(room.clients[0].socket, null, cb);
+            this.asyncGetState(room.clients[1].socket, null, cb);
+ 
         });
     }
 
@@ -142,116 +144,24 @@ class PlayController{
 
             if(!other_client.last_action) return cb ? cb() : null;
 
-            if(client.last_action.cmd == cmds.TOUCH_DOWN && other_client.last_action.cmd == cmds.TOUCH_DOWN){
-                let x1 = client.last_action.data.x;
-                let y1 = client.last_action.data.y;
-                let x2 = other_client.last_action.data.x;
-                let y2 = other_client.last_action.data.y;
+            room.update((err, go) => {
+                if(err){
+                    this.logError(err);
+                    return cb ? cb() : null;
+                }
 
-                let d = Math.pow((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2), 0.5);
-
-                let near_touch = false;
-
-                for(let i = 0; i < this._configs.intervals.length; i++)
-                    if(d <= this._configs.intervals[i].length){
-                        let total_points = this._configs.intervals[i].points;
-                        room.room.points += total_points;
-                        room.total_points += total_points;
-                        near_touch = true;
-                        break;        
-                    }
+                room.clients[0].last_action = undefined;
+                room.clients[1].last_action = undefined;
                 
-                
-                if(!near_touch) 
-                {
-                    if(room.total_points >= this._configs.intervals[this._configs.intervals.length - 1].points)
-                        room.total_points -= this._configs.intervals[this._configs.intervals.length - 1].points;
-                    else
-                       room.total_points = 0;
-                } 
-                let data1 = {'room_id': room.room.id, 
-                             'x': x2, 
-                             'y': y2, 
-                             'points': room.room.points,
-                             'total_room_points': room.total_points};
-                let data2 = {'room_id': room.room.id, 
-                             'x': x1, 
-                             'y': y1, 
-                             'points': room.room.points,
-                             'total_room_points': room.total_points};
-                
-                client.socket.emit(emits.COMPANON_TOUCH_DOWN, data1);
-                other_client.socket.emit(emits.COMPANON_TOUCH_DOWN, data2);
-            }else if(client.last_action.cmd == cmds.TOUCH_DOWN){
-                let x = client.last_action.data.x;
-                let y = client.last_action.data.y;
-                if(room.total_points >= this._configs.intervals[this._configs.intervals.length - 1].points)
-                    room.total_points -= this._configs.intervals[this._configs.intervals.length - 1].points;
-                else
-                    room.total_points = 0;
-
-                
-                let data_1 = {'room_id': room.room.id, 
-                              'x': x, 
-                              'y': y, 
-                              'points': room.room.points,
-                              'total_room_poitns': room.total_points};
-
-                let data_2 = {'room_id': room.room.id, 
-                              'points': room.room.points,
-                              'total_room_points': room.total_points};
-                
-                client.socket.emit(emits.COMPANON_TOUCH_UP, data_2);
-                other_client.socket.emit(emits.COMPANON_TOUCH_DOWN, data_1);
-
-            }else if(other_client.last_action.cmd == cmds.TOUCH_DOWN){
-                let x = other_client.last_action.data.x;
-                let y = other_client.last_action.data.y;
-                
-                if(room.total_points >= this._configs.intervals[this._configs.intervals.length - 1].points)
-                    room.total_points -= this._configs.intervals[this._configs.intervals.length - 1].points;
-                else
-                    room.total_points = 0;
-
-                let data_1 = {'room_id': room.room.id, 
-                              'x': x, 
-                              'y': y, 
-                              'points': room.room.points,
-                              'total_room_points': room.total_points};
-
-                let data_2 = {'room_id': room.room.id, 
-                              'points': room.room.points,
-                              'total_room_points': room.total_points};
-                    
-                client.socket.emit(emits.COMPANON_TOUCH_DOWN, data_1);
-                other_client.socket.emit(emits.COMPANON_TOUCH_UP, data_2);
-            }else{
-                if(room.total_points >= this._configs.intervals[this._configs.intervals.length - 1].points)
-                    room.total_points -= this._configs.intervals[this._configs.intervals.length - 1].points;
-                else
-                    room.total_points = 0;
-
-                room.clients[0].socket.emit(emits.COMPANON_TOUCH_UP, 
-                    {'room_id': room.room.id, 
-                     'points': room.room.points,
-                     'total_room_points': room.total_points});
-                room.clients[1].socket.emit(emits.COMPANON_TOUCH_UP, 
-                    {'room_id': room.room.id, 
-                     'points': room.room.points,
-                     'total_room_points': room.total_points});
-            }
-
-            room.clients[0].last_action = undefined;
-            room.clients[1].last_action = undefined;
-
-            this.asyncGetState(room.clients[0].socket, cb);
-            this.asyncGetState(room.clients[1].socket, cb);
+                this.asyncGetState(room.clients[0].socket, go, cb);
+                this.asyncGetState(room.clients[1].socket, go, cb);
+            });
         });
     }
 
-    asyncGetState(socket, cb){
+    asyncGetState(socket, data, cb){
         setTimeout(()=>{
-            socket.emit(emits.GET_STATE);
+            socket.emit(emits.GET_STATE, data);
             return cb ? cb() : null;
         }, this._configs.get_state_interval);
     }

@@ -98,10 +98,21 @@ class Level2{
             this.bonus_model.enabled = false;
         }
         
-        o_s[p1.name].point = p1.action == cmds.TOUCH_DOWN ? {x: pp1.x, y:pp1.y} : {x: -9999, y: -9999};
-        o_s[p1.name].action = p1.action;
-        o_s[p2.name].point = p2.action == cmds.TOUCH_DOWN ? {x: pp2.x, y: pp2.y} : {x: -9999, y: -9999};
-        o_s[p2.name].action = p2.action;
+        
+        if(p1.action == cmds.TOUCH_DOWN && pp1){
+            o_s[p1.name].point = {x:pp1.x, y: pp1.y};
+            o_s[p1.name].action = cmds.TOUCH_DOWN;
+        }else{
+            o_s[p1.name].point = null;
+            o_s[p1.name].action = cmds.TOUCH_UP;
+        }
+        if(p2.action == cmds.TOUCH_DOWN && pp2){
+            o_s[p2.name].point = {x:pp2.x, y: pp2.y};
+            o_s[p2.name].action = cmds.TOUCH_DOWN;
+        }else{
+            o_s[p2.name].point = null;
+            o_s[p2.name].action = cmds.TOUCH_UP;
+        }
         
         return cb(null, {
                 'near': near,

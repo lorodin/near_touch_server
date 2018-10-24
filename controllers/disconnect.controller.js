@@ -53,6 +53,7 @@ class DisconnectController{
                     });
                 });
             }else{
+                io_room.room.points += io_room.getTotalPoints();
                 this._db.RoomsRepository.saveRoom(io_room.room, (err, room) => {
                     if(err){
                         this.logError(err);
